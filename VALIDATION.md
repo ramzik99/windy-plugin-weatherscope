@@ -17,3 +17,11 @@ Tests cover selected points, responses and interactions, not every weather regim
 ## 0.5.0 Forecast Desk release checks
 
 Production and standalone preview builds pass. All 65 tests pass, including daily boundaries, interval coverage, predictability alignment, missing-data handling and winter diagnostics. Expanded Meteorology and model comparison were checked with labelled synthetic preview data. Live hosted-release verification follows publication.
+
+Hosted 0.5.0 published and installed successfully on 2026-09-22. Live Amman checks passed for Forecast Desk, daily selection, Meteorology profile and calculations, exact-time Meteoblue/ECMWF/GFS/ICON temperature comparison, and integrated ECMWF Winter forecast. No browser console errors were recorded during those checks.
+
+Source limitation: Windy returned a Meteoblue run displayed as 70 hours old, with remaining coverage only through September 23, even after refresh. The seven-day overview therefore leaves later dates unavailable. Provider predictability was shown on aligned dates and withheld on a non-aligned date. Profile dew point was absent, so humidity-dependent indices stayed unavailable. These checks verify behavior, not meteorological accuracy. New-release contour rendering was not rechecked; it was verified in 0.4.0.
+
+Hosted install URL: https://windy-plugins.com/458307/windy-plugin-weatherscope/0.5.0/plugin.min.js
+Source release commit: 76be7f7b9e8fa2390dec02a80bd20c092d82ea14
+Distribution remains by installation URL, not a public-gallery listing.

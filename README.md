@@ -2,7 +2,7 @@
 
 **Every detail. One clear forecast.** A Meteoblue-first point-forecast workspace for Windy.
 
-Version 0.5.0 introduces Forecast Desk: a seven-day overview with provider predictability and expandable meteorological detail. Distribution uses an installation URL; public-gallery review has not been requested.
+Version 0.5.0 is published and live-checked on Windy's hosting. Forecast Desk provides a seven-day overview with provider predictability and expandable meteorological detail. Distribution uses an installation URL; public-gallery review has not been requested.
 
 ## Install
 
@@ -66,6 +66,7 @@ The current configuration is `private: true`, for installation by a share link. 
 ## Attribution
 
 Build tooling is adapted from the [official Windy plugin template](https://github.com/windycom/windy-plugin-template). Its dependencies retain their own licenses. WeatherScope application code is ISC licensed.
+
 
 
 
