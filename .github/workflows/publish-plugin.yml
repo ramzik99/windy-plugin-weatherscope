@@ -1,0 +1,25 @@
+name: Publish WeatherScope to Windy
+on:
+  workflow_dispatch:
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Publish to Windy
+        env:
+          WINDY_API_KEY: ${{ secrets.WINDY_API_KEY }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+          RELEASE_OWNER: ${{ github.repository_owner }}
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: node scripts/publish.mjs
+
