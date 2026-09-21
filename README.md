@@ -2,7 +2,15 @@
 
 **Every detail. One clear forecast.** A Meteoblue-first point-forecast workspace for Windy.
 
-Version 0.3.0 is an early source release. Local tests and builds pass; live Windy plugin responses have not yet been validated. It is not yet published in Windy's plugin gallery.
+Version 0.3.1 is published on Windy's hosting and has passed a live Meteoblue point-forecast check. It is available by installation URL; public-gallery review has not been requested.
+
+## Install
+
+In [Windy Plugins](https://www.windy.com/plugins), choose **Load plugin directly from URL** and paste:
+
+https://windy-plugins.com/458307/windy-plugin-weatherscope/0.3.1/plugin.min.js
+
+After installation, [open WeatherScope](https://www.windy.com/plugin/weatherscope). See [validation details](VALIDATION.md) for tested coverage and limitations.
 
 ## At a glance
 
@@ -45,11 +53,11 @@ The preview server opens at http://127.0.0.1:9998. Compiled plugin files are in 
 
 Windy's access conditions apply. No separate Meteoblue API product is purchased or connected.
 
-## Publish to Windy later
+## Publish future versions
 
 The manual **Publish WeatherScope to Windy** GitHub Actions workflow builds and uploads the plugin after a repository secret named `WINDY_API_KEY` is configured with a Windy Plugins API key. Never put that key in source files. See [Windy's publishing instructions](https://docs.windy-plugins.com/getting-started/publishing-plugin.html).
 
-The current configuration is `private: true`, for installation by a share link. Public gallery inclusion is a separate Windy review process. The workflow has not been run; publishing this GitHub repository does not install the plugin in Windy.
+The current configuration is `private: true`, for installation by a share link. Public gallery inclusion is a separate Windy review process. Version 0.3.1 was uploaded directly using Windy's documented endpoint. The optional GitHub workflow has not been configured or run.
 
 ## Attribution
 

@@ -8,7 +8,7 @@ Checked 21 September 2026. Meteoblue is a suitable **baseline**, but complete co
 2. Windy's official documentation explicitly supports Meteoblue soundings and says Meteoblue is not supported as the main map model: https://docs.windy-plugins.com/api/interfaces/DataSpecifications.DataSpecifications.html#soundingproduct
 3. The installed official `@windycom/plugin-devtools` 3.0.4 schema defines optional meteogram, airgram and sounding includes. It documents temperature, humidity, wind, wind direction, cloud fraction and geopotential heights across pressure levels. This is a shared schema, not a guarantee that each model returns all fields.
 4. Meteoblue's own catalogue documents Basic, Clouds, Air, Agro, Profile Series and other packages: https://docs.meteoblue.com/en/meteo/variables/weather-variables
-5. Windy sign-in and developer terms are complete. Live custom-plugin loading remains blocked by the local certificate warning; no raw Meteoblue plugin response has been verified.
+5. Live WeatherScope 0.3.1 was installed from Windy hosting and tested at Basel. The actual Meteoblue response exposed 169 fields; surface forecasts, predictability, upper-air temperature/RH/wind/heights and model comparisons loaded. Upper-air dew-point fields were absent, so humidity-dependent profile indices were withheld. See VALIDATION.md.
 
 ## Coverage by requirement
 
@@ -19,7 +19,7 @@ Checked 21 September 2026. Meteoblue is a suitable **baseline**, but complete co
 | Upper-air T, Td, RH, wind, heights | Sounding support confirmed; field/level completeness requires response inspection | Request sounding/airgram/meteogram; report actual coverage |
 | Relative humidity, forecast pressure change | Derivable when same-source inputs and valid times exist | Label as calculated, retain method |
 | CAPE, CIN, lifted index, helicity | Documented in Meteoblue's own Air package; not guaranteed by Windy's point schema | Additional Meteoblue package access or validated calculations needed |
-| Lapse rate, freezing level, K index, Total Totals | Calculable with adequate same-time profiles | v0.2 calculates 850–500 lapse rate, first bracketed freezing crossing, K and TT with required inputs above model terrain; live validation pending |
+| Lapse rate, freezing level, K index, Total Totals | Calculable with adequate same-time profiles | v0.2 calculates 850–500 lapse rate, first bracketed freezing crossing, K and TT with required inputs above model terrain; tested at Basel where inputs were supplied |
 | LCL, LFC, EL | Requires validated parcel calculations | Not implemented |
 | 0–6 km shear, SRH | Needs sufficient vertical wind/height coverage and storm-motion definition for SRH | Do not infer from isolated pressure levels |
 | Precipitable water | No direct field confirmed in inspected Windy schema | Validate profile integration or obtain direct field |
