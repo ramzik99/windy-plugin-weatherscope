@@ -1,14 +1,15 @@
-# Validation — WeatherScope 0.3.1
+# Validation — WeatherScope 0.4.0
 
 Verified 21 September 2026.
 
-- Local build passes; all 15 automated data-semantics tests pass.
-- Hosted by Windy: https://windy-plugins.com/458307/windy-plugin-weatherscope/0.3.1/plugin.min.js
-- Installed and opened on Windy at sample point Basel (47.56, 7.59), with Meteoblue selected.
-- Actual response exposed 169 distinct fields: surface temperature/dew point/wind/gust/pressure/precipitation, daily predictability and pressure-level temperature, humidity, wind and height data.
-- Live profile displayed calculated lapse rate, pressure-level vector shear, bracketed freezing crossing and hodograph. Upper-air dew-point values were absent; K and Total Totals were withheld.
-- ECMWF, GFS and ICON comparisons loaded at matching valid times.
-- Provider run metadata displayed 19 September 00:00 UTC for Meteoblue. It is reported as supplied, not relabelled as a fresh model cycle.
-- Synthetic preview checked at desktop and 390px mobile width, including saved points, time selection, sticky navigation and automatic comparisons.
+- Production build passes. Combined suite: 57 tests pass, including original Wintry physics, interval coverage, accumulation, terrain, contour and freshness tests.
+- Published: https://windy-plugins.com/458307/windy-plugin-weatherscope/0.4.0/plugin.min.js
+- Installed through Windy's plugin URL loader; Winter tab appears in the hosted plugin.
+- Basel test: actual ECMWF profiles and Windy terrain loaded. Point card, 144-hour graph, precipitation phases, new-snow guidance and embedded sounding rendered. Terrain 250 m and selected-time snowline 2220 m were displayed in this test response.
+- Winter time control updated Windy's timeline and the embedded forecast/sounding time.
+- Optional contours rendered across the current map, with six visible contour labels. No console errors were recorded during the winter check.
+- Ordinary map click changed the shared point to a Mediterranean Sea test point. Winter updated its terrain and snowline; switching to Brief showed Meteoblue for that same point.
+- Leaving Winter removed its map layers. Leaving while contour requests were running also left zero winter contour labels.
+- General Meteoblue point response supplied 169 fields; the existing source-labelled forecast remains separate from ECMWF winter diagnostics.
 
-This verifies the tested account, point and returned times, not every location or weather regime. CAPE/CIN, parcel ascent, SRH and observations are not implemented. The plugin is shareable by URL; Windy public-gallery review has not been requested.
+Tests cover selected points, responses and interactions, not every weather regime. Winter phase, snowline and new snow remain model-derived guidance with the original uncertainty and missing-data rules. Public-gallery review has not been requested.
