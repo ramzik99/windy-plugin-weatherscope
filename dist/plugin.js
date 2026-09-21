@@ -1,8 +1,10 @@
 const __pluginConfig =  {
   "name": "windy-plugin-weatherscope",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "icon": "◉",
   "title": "WeatherScope",
+  "author": "Ramzi Kandah",
+  "repository": "https://github.com/ramzik99/windy-plugin-weatherscope",
   "description": "Every detail. One clear forecast. Meteoblue baseline and complete returned-parameter explorer.",
   "desktopUI": "rhpane",
   "mobileUI": "fullscreen",
@@ -10,8 +12,8 @@ const __pluginConfig =  {
   "addToContextmenu": true,
   "listenToSingleclick": true,
   "private": true,
-  "built": 1790022071516,
-  "builtReadable": "2026-09-21T20:21:11.516Z"
+  "built": 1790022628289,
+  "builtReadable": "2026-09-21T20:30:28.289Z"
 };
 
 // transformCode: import { map } from '@windy/map';
