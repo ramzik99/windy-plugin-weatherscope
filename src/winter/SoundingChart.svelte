@@ -331,4 +331,7 @@
 
   .hover-level{stroke:rgba(255,255,255,.58);stroke-width:1;stroke-dasharray:2 2}.hover-temp{fill:#0d171d;stroke:#ff765f;stroke-width:2}.hover-dew{fill:#0d171d;stroke:#72d98b;stroke-width:2}.hover-wet{fill:#0d171d;stroke:#69d4ff;stroke-width:2}.sounding-hover{position:absolute;z-index:6;top:78px;right:14px;display:grid;grid-template-columns:repeat(3,auto);gap:4px 8px;width:160px;max-width:calc(100% - 28px);box-sizing:border-box;padding:7px 8px;border:1px solid rgba(255,255,255,.16);border-radius:8px;background:rgba(5,10,14,.96);box-shadow:0 8px 22px rgba(0,0,0,.48);pointer-events:none}.sounding-hover b{grid-column:1/-1;color:#eaf5fa;font-size:8px}.sounding-hover span{color:#aebcc4;font-size:7px;font-weight:750}
   .actions .png{display:inline-block!important;font-size:10px}.actions button{min-height:32px}.stats small{font-size:10px}.stats b{font-size:12px}.hint{font-size:10px}
+
+ .sounding-shell.sounding-embedded{background:var(--panel,#152b37);color:var(--ink,#edf7fa)}.sounding-embedded .actions button{min-height:38px;min-width:38px;font-weight:500}.sounding-embedded .actions .png,.sounding-embedded .actions .zoom-readout{font-size:11px}.sounding-embedded .stats small{font-size:11px;color:var(--muted,#b2c7d1)}.sounding-embedded .stats b{font-size:12px;font-weight:500}.sounding-embedded .stats span{padding:10px 4px}.sounding-embedded .phase-banner small,.sounding-embedded .phase-banner em,.sounding-embedded .hint{font-size:11px}.sounding-embedded .phase-banner b{font-size:14px;font-weight:500}
+
 </style>

@@ -13,3 +13,7 @@ Verified 21 September 2026.
 - General Meteoblue point response supplied 169 fields; the existing source-labelled forecast remains separate from ECMWF winter diagnostics.
 
 Tests cover selected points, responses and interactions, not every weather regime. Winter phase, snowline and new snow remain model-derived guidance with the original uncertainty and missing-data rules. Public-gallery review has not been requested.
+
+## 0.5.0 Forecast Desk release checks
+
+Production and standalone preview builds pass. All 65 tests pass, including daily boundaries, interval coverage, predictability alignment, missing-data handling and winter diagnostics. Expanded Meteorology and model comparison were checked with labelled synthetic preview data. Live hosted-release verification follows publication.
