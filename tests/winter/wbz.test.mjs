@@ -1,0 +1,323 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import ts from 'typescript';
+
+function moduleUrl(name, replacements = []) {
+  let source = readFileSync(new URL(`../../src/winter/${name}.ts`, import.meta.url), 'utf8');
+  for (const [from, to] of replacements) source = source.replaceAll(from, to);
+  source = source.replace(/(['"])\.\/([A-Za-z]+)\1/g, (_, quote, dependency) => JSON.stringify(moduleUrl(dependency)));
+  const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
+  return `data:text/javascript;base64,${Buffer.from(js).toString('base64')}`;
+}
+const coreUrl = moduleUrl('snowLevel');
+const { wetBulbZeroHeight, buildProfile } = await import(coreUrl);
+const { valueAt } = await import(coreUrl);
+const { buildForecastTimes, intervalEnd, coversWindow } = await import(moduleUrl('forecastTimeline'));
+const { contourLinesForLevels, contourPolylines: singleLevelLines } = await import(moduleUrl('contours'));
+
+test('blank weather fields stay missing while explicit numeric zero is retained',()=>{
+  for(const raw of ['', '  ', null, undefined, NaN])assert.equal(valueAt([raw],0),null);
+  assert.equal(valueAt(['0'],0),0);
+  assert.equal(valueAt([0],0),0);
+});
+
+test('forecast axes accept supported units without shifting data after an invalid timestamp',()=>{
+  const base=1800000000000,h=3600000;
+  const expected=[base,base+3*h,base+6*h];
+  assert.deepEqual(buildForecastTimes({hours:[0,3,6]},base),expected);
+  assert.deepEqual(buildForecastTimes({hours:expected},null),expected);
+  assert.deepEqual(buildForecastTimes({hours:expected.map(t=>t/1000)},null),expected);
+  for(const hours of [[0,null,6],[0,'',6],[0,6,3],[0,3,3]])assert.deepEqual(buildForecastTimes({hours},base),[]);
+  assert.deepEqual(buildForecastTimes({hours:[0,3]},null),[]);
+  assert.deepEqual(buildForecastTimes({hours:[0,144,147]},base),[base,base+144*h]);
+});
+
+test('daily totals require the full requested window but ignore missing data outside it',()=>{
+  const h=3600000,times=Array.from({length:50},(_,i)=>i*3*h),known=times.map(()=>true);
+  known[12]=false;
+  assert.equal(coversWindow(times,known,0,24*h),true);
+  assert.equal(coversWindow(times,known,24*h,48*h),false);
+  assert.equal(coversWindow([0,6*h],[true,true],0,9*h),false);
+  assert.equal(coversWindow(times,known,140*h,164*h),false);
+  assert.equal(intervalEnd(times,48),144*h);
+  assert.equal(intervalEnd([0,3*h],0),3*h);
+});
+
+test('batched contour preparation preserves geometry and leaves the input unchanged',()=>{
+  const field=[[0,null,400],[200,null,800],[400,600,1000]].map((row,r)=>row.map((value,c)=>({lat:70+r,lon:c,value})));
+  const original=structuredClone(field),levels=[0,200,500,800];
+  const lines=contourLinesForLevels(field,levels);
+  for(const level of levels)assert.deepEqual(lines.get(level),singleLevelLines(field,level));
+  assert.deepEqual(field,original);
+});
+const { terrainCrossingState } = await import(moduleUrl('terrainCrossing', [["'./snowLevel'", JSON.stringify(coreUrl)]]));
+const point = (heightM, wetBulbC) => ({heightM, wetBulbC, pressureHpa:850, level:'850h', tempC:wetBulbC, dewpointC:wetBulbC});
+
+test('interpolates the atmospheric crossing and is independent of input order', () => {
+  const r = wetBulbZeroHeight([point(2000,-2), point(1000,2), point(0,6)]);
+  assert.equal(r.status,'resolved'); assert.equal(r.snowLevelM,1500);
+  assert.equal(r.lower.heightM,1000);
+});
+test('WBZ remains below local mountain terrain for a snow comparison', () => {
+  const p=[point(0,2),point(1000,-2),point(2000,-8)];
+  assert.equal(wetBulbZeroHeight(p).snowLevelM,500);
+});
+test('valid terrain below sea level is retained', () => {
+  assert.equal(wetBulbZeroHeight([point(-300,2),point(100,-2)]).snowLevelM,-100);
+});
+test('an exact zero level resolves and an already cold column stays finite below the profile', () => {
+  assert.equal(wetBulbZeroHeight([point(800,0)]).snowLevelM,800);
+  const cold=wetBulbZeroHeight([point(800,-1),point(1800,-5)]);
+  assert.equal(cold.status,'below-lowest-level');
+  assert.equal(cold.snowLevelM,550);
+  assert.equal(cold.upperBoundM,800);
+  assert.equal(cold.extrapolated,true);
+});
+test('cold-column fallback remains finite with a shallow or inverted resolved gradient', () => {
+  const shallow=wetBulbZeroHeight([point(100,-2),point(1100,-2.2)]);
+  const inversion=wetBulbZeroHeight([point(100,-2),point(1100,-1)]);
+  assert.ok(Number.isFinite(shallow.snowLevelM));
+  assert.ok(Number.isFinite(inversion.snowLevelM));
+  assert.ok(shallow.snowLevelM < 100);
+  assert.ok(inversion.snowLevelM < 100);
+});
+test('missing, warm-only and duplicate-height profiles produce no fabricated WBZ', () => {
+  assert.equal(wetBulbZeroHeight([]).status,'insufficient-profile');
+  
+  assert.equal(wetBulbZeroHeight([point(0,2),point(1000,1)]).status,'no-crossing');
+  assert.equal(wetBulbZeroHeight([point(1000,2),point(1000,-2)]).snowLevelM,null);
+  assert.equal(wetBulbZeroHeight([point(NaN,1),point(1000,NaN)]).snowLevelM,null);
+});
+test('raw forecast heights stay in metres and feed the terrain-aware calculation', () => {
+  const profile=buildProfile({'temp-850h':[275.15],'dewpoint-850h':[275.15],'gh-850h':[1500],
+    'temp-700h':[271.15],'dewpoint-700h':[271.15],'gh-700h':[3000]},0);
+  assert.equal(wetBulbZeroHeight(profile).snowLevelM,2250);
+  assert.equal(wetBulbZeroHeight(profile).snowLevelM,2250);
+});
+test('terrain timing stays continuous through a fully cold forecast interval', () => {
+  const p={times:[0,3600000,7200000],forecast:{
+    'temp-850h':[2,-2,2], 'dewpoint-850h':[2,-2,2], 'gh-850h':[1000,1000,1000],
+    'temp-700h':[-2,-4,-2], 'dewpoint-700h':[-2,-4,-2], 'gh-700h':[2000,2000,2000]}};
+  const r=terrainCrossingState(p,800,0);
+  assert.equal(r.direction,'below');
+  assert.ok(r.crossingTime !== null);
+});
+
+test('crossing timing keeps a crossing after the midpoint and never bridges missing hours',()=>{
+  const h=3600000,p={times:[0,3*h,6*h],forecast:{
+    'temp-850h':[2,-2,2], 'dewpoint-850h':[2,-2,2], 'gh-850h':[1000,1000,1000],
+    'temp-700h':[-2,-4,-2], 'dewpoint-700h':[-2,-4,-2], 'gh-700h':[2000,2000,2000]}};
+  const upcoming=terrainCrossingState(p,300,2*h);
+  assert.equal(upcoming.direction,'below');assert.ok(upcoming.crossingTime>2*h);
+  const after=terrainCrossingState(p,300,2.8*h);
+  assert.equal(after.direction,'above');assert.ok(after.crossingTime>3*h);
+  p.times=[0,6*h,12*h];
+  assert.equal(terrainCrossingState(p,300,0).crossingTime,null);
+});
+
+const { terrainHatchSegments } = await import(moduleUrl('terrainHatching'));
+const { terrainPrecipitationType } = await import(moduleUrl('precipType'));
+const { precipitationLabel } = await import(moduleUrl('precipType'));
+test('low-confidence mountain snow is consistently qualified without changing its diagnosis',()=>{
+  const phase=terrainPrecipitationType([point(3500,1),point(5000,-10),point(7500,-25)],4790);
+  assert.equal(phase.key,'snow');assert.equal(phase.confidence,'low');
+  assert.equal(precipitationLabel(phase),'Snow possible');
+  assert.equal(precipitationLabel({...phase,confidence:'high'}),'Snow');
+  assert.equal(precipitationLabel({...phase,confidence:'high'},'low'),'Snow possible');
+  assert.equal(precipitationLabel({...phase,label:'Freezing rain'}),'Freezing rain possible');
+});
+const grid=(values)=>values.map((row,r)=>row.map((difference,c)=>({x:c*100,y:r*100,difference})));
+test('hatching covers positive terrain differences only',()=>{
+  const lines=terrainHatchSegments(grid([[-100,100],[-100,100]]),10);
+  assert.ok(lines.length>0);
+  for(const line of lines) for(const [x,y] of line){assert.ok(x>=50-1e-8&&x<=100);assert.ok(y>=0&&y<=100);}
+});
+test('equal, lower and missing terrain remain unhatchable',()=>{
+  for(const values of [[[0,0],[0,0]],[[-1,-2],[-3,-4]],[[100,null],[100,100]]])
+    assert.equal(terrainHatchSegments(grid(values)).length,0);
+});
+test('hatching follows a changed forecast snowline',()=>{
+  assert.ok(terrainHatchSegments(grid([[100,100],[100,100]])).length>0);
+  assert.equal(terrainHatchSegments(grid([[-100,-100],[-100,-100]])).length,0);
+});
+
+test('hatch stripes join across triangle boundaries without duplicate overlaps',()=>{
+  const lines=terrainHatchSegments(grid([[100,100],[100,100]]),20);
+  const offsets=lines.map(line=>Math.round(line[0][0]+line[0][1]));
+  assert.equal(new Set(offsets).size,lines.length);
+  const diagonal=lines.find(line=>Math.abs(line[0][0]+line[0][1]-100)<1e-8);
+  assert.deepEqual(diagonal,[[0,100],[100,0]]);
+});
+
+test('joined hatching preserves missing-data gaps',()=>{
+  const values=Array.from({length:6},()=>[100,100,null,100,100]);
+  const lines=terrainHatchSegments(grid(values),20);
+  assert.ok(lines.some(line=>line[0][0]>=300));
+  assert.ok(lines.some(line=>line[1][0]<=100));
+  for(const line of lines)assert.ok(line[1][0]<=100||line[0][0]>=300);
+});
+test('cold mountain profile still diagnoses snow above the atmospheric WBZ',()=>{
+  const p=[point(0,2),point(1000,-2),point(1800,-5),point(2600,-8)];
+  assert.equal(wetBulbZeroHeight(p).snowLevelM,500);
+  assert.equal(terrainPrecipitationType(p,1200).key,'snow');
+});
+
+const { contourPolylines } = await import(moduleUrl('contours'));
+test('contours bridge a missing viewport sample instead of breaking around it',()=>{
+  const missing={lat:0,lon:0,value:null};
+  const field=[
+    [{lat:70,lon:0,value:0},missing,{lat:70,lon:2,value:4}],
+    [{lat:71,lon:0,value:0},missing,{lat:71,lon:2,value:4}],
+    [{lat:72,lon:0,value:0},missing,{lat:72,lon:2,value:4}],
+  ];
+  const lines=contourPolylines(field,1);
+  assert.equal(lines.length,1);
+  assert.ok(lines[0].length>=3);
+  assert.ok(lines[0].every(([lat,lon])=>lat>=70&&lat<=72&&lon>=0&&lon<=2));
+});
+
+const { alignPrecipIntervals } = await import(moduleUrl('precipIntervals'));
+const { formatPrecip } = await import(moduleUrl('displayUnits'));
+const { estimateNewSnowStep } = await import(moduleUrl('snowAccum'));
+const precipUrl=moduleUrl('precip',[["'./snowLevel'",JSON.stringify(coreUrl)]]);
+const {precipMmAt}=await import(precipUrl);
+const {nextWintryEvent}=await import(moduleUrl('eventOutlook',[["'./snowLevel'",JSON.stringify(coreUrl)],["'./precip'",JSON.stringify(precipUrl)],["'./precipType'",JSON.stringify(moduleUrl('precipType'))],["'./snowAccum'",JSON.stringify(moduleUrl('snowAccum'))]]));
+test('three-hour source totals align by interval start, with no missing-value invention',()=>{
+ const h=3600000;
+ const data=alignPrecipIntervals([0,3*h,6*h],[6,null,9],[-h,0,2*h,3*h,6*h,9*h]);
+ assert.deepEqual(data.__precipMm3h,[null,6,6,null,9,null]);
+ assert.equal(precipMmAt(data,0),null);
+ assert.equal(precipMmAt(data,1),6);
+ assert.equal(formatPrecip(6,'metric'),'6 mm/3h');
+});
+test('three-hour snowfall uses the full liquid amount',()=>{
+ const phase={key:'snow',surfaceWetBulbC:-5};
+ assert.equal(estimateNewSnowStep(6,phase,0,3).cumulativeCm,9);
+});
+test('a single three-hour snow interval contributes a full interval to event totals',()=>{
+ const h=3600000;
+ const p={times:[0,3*h,6*h],forecast:{__precipMm3h:[6,0,0],
+ 'temp-850h':[-5,-5,-5],'dewpoint-850h':[-5,-5,-5],'gh-850h':[1000,1000,1000],
+ 'temp-700h':[-8,-8,-8],'dewpoint-700h':[-8,-8,-8],'gh-700h':[3000,3000,3000]}};
+ const e=nextWintryEvent(p,1000,0);
+ assert.ok(e);assert.equal(e.endTime,3*h);assert.equal(e.newSnowCm,9);
+});
+
+const { prepareSnowlineContours } = await import(moduleUrl('snowlineContours'));
+const contourGrid = values => values.map((row, r) => row.map((value, c) => ({lat:70+r,lon:c,value})));
+
+test('contour display floors cold diagnostics at -500 m without changing raw terrain values',()=>{
+  const cold=wetBulbZeroHeight([point(100,-12),point(1100,-18)]);
+  assert.equal(cold.snowLevelM,-1900);
+  assert.equal(cold.status,'below-lowest-level');
+  const raw=contourGrid([[cold.snowLevelM,-500,-430],[-100,0,1000]]);
+  const original=structuredClone(raw);
+  const {field,levels}=prepareSnowlineContours(raw,100);
+  assert.deepEqual(field.map(row=>row.map(p=>p.value)),[[-500,-500,-430],[-100,0,1000]]);
+  assert.deepEqual(raw,original);
+  assert.equal(levels[0],-500);
+  assert.equal(levels.at(-1),1000);
+  assert.equal(cold.snowLevelM,-1900);
+});
+
+test('all zoom intervals respect the contour floor and retain zero and major levels',()=>{
+  for(const interval of [100,200,500]){
+    const {field,levels}=prepareSnowlineContours(contourGrid([[-1900,1200],[-800,1200]]),interval);
+    assert.equal(levels[0],-500);
+    assert.ok(levels.includes(0));
+    assert.ok(levels.includes(1000));
+    assert.ok(levels.every(level=>level>=-500));
+    assert.ok(levels.slice(1).every(level=>level%interval===0));
+    for(const level of [-2000,-1000,-600]) assert.deepEqual(contourPolylines(field,level),[]);
+    assert.ok(contourPolylines(field,0).length>0);
+  }
+  const {levels}=prepareSnowlineContours(contourGrid([[-430,0],[-430,0]]),200);
+  assert.deepEqual(levels,[-500,-400,-200,0]);
+});
+
+test('contour floor keeps missing samples missing and handles entirely cold or absent fields',()=>{
+  const {field,levels}=prepareSnowlineContours(contourGrid([[-1900,null],[NaN,Infinity]]),100);
+  assert.deepEqual(field.map(row=>row.map(p=>p.value)),[[-500,null],[null,null]]);
+  assert.deepEqual(levels,[-500]);
+  assert.deepEqual(contourPolylines(field,-600),[]);
+  assert.deepEqual(prepareSnowlineContours(contourGrid([[null,NaN]]),200).levels,[]);
+  assert.deepEqual(prepareSnowlineContours([],500),{field:[],levels:[]});
+});
+
+const { conditionLabel, noEventMessage } = await import(moduleUrl('forecastStatus'));
+const { forecastIntervalIndex, forecastIntervalHours } = await import(moduleUrl('forecastTime'));
+const { profileIsFresh, isOlderRun, PROFILE_CACHE_TTL_MS } = await import(moduleUrl('forecastFreshness'));
+
+test('missing precipitation and unknown wet phase are never labelled dry',()=>{
+  assert.equal(conditionLabel(null,null),'Precipitation unavailable');
+  assert.equal(conditionLabel(NaN,null),'Precipitation unavailable');
+  assert.equal(conditionLabel(0,null),'Dry');
+  assert.equal(conditionLabel(2,null),'Precipitation · type uncertain');
+  assert.equal(conditionLabel(2,{label:'Snow'}),'Snow');
+});
+
+test('a zero-crossing layer uses the correct signed triangular areas',()=>{
+  const phase=terrainPrecipitationType([point(0,-2),point(1000,2),point(2000,-2)],0);
+  assert.equal(phase.meltingDegreeMetres,1000);
+  assert.equal(phase.refreezingDegreeMetres,500);
+  assert.equal(phase.key,'freezing-rain');
+  const snow=terrainPrecipitationType([point(0,-5),point(1000,-8),point(2000,-12)],0);
+  assert.equal(snow.meltingDegreeMetres,0);
+  assert.equal(snow.key,'snow');
+});
+
+test('interval selection preserves ongoing weather and rejects gaps and out-of-range times',()=>{
+  const h=3600000,times=[0,3*h,6*h];
+  assert.equal(forecastIntervalIndex(times,2*h),0);
+  assert.equal(forecastIntervalIndex(times,3*h),1);
+  assert.equal(forecastIntervalIndex(times,-1),-1);
+  assert.equal(forecastIntervalIndex(times,9*h),-1);
+  assert.equal(forecastIntervalIndex([0,6*h],4*h),-1);
+  assert.equal(forecastIntervalHours([0,h,2*h],0),1);
+});
+
+const snowEventPoint=()=>({times:[0,3*3600000,6*3600000],forecast:{__precipMm3h:[6,0,0],
+  'temp-850h':[-5,-5,-5],'dewpoint-850h':[-5,-5,-5],'gh-850h':[1000,1000,1000],
+  'temp-700h':[-8,-8,-8],'dewpoint-700h':[-8,-8,-8],'gh-700h':[3000,3000,3000]}});
+
+test('an ongoing snow event reports its remaining interval and amount',()=>{
+  const h=3600000,event=nextWintryEvent(snowEventPoint(),1000,2*h);
+  assert.ok(event);assert.equal(event.activeNow,true);assert.equal(event.endTime,3*h);
+  assert.equal(event.newSnowCm,3);assert.equal(event.incomplete,false);
+  assert.equal(nextWintryEvent(snowEventPoint(),1000,3*h),null);
+});
+
+test('an upcoming event is not called current and does not invent a minimum fifteen-minute amount',()=>{
+  const h=3600000,p=snowEventPoint();p.forecast.__precipMm3h=[0,6,0];
+  assert.equal(nextWintryEvent(p,1000,2*h).activeNow,false);
+  const nearEnd=nextWintryEvent(p,1000,6*h-5*60000);
+  assert.ok(Math.abs(nearEnd.newSnowCm-.25)<1e-9);
+});
+
+test('a missing interval makes an event amount uncertain',()=>{
+  const h=3600000,p=snowEventPoint();p.times=[0,h,2*h];p.forecast.__precipMm3h=[6,null,6];
+  const event=nextWintryEvent(p,1000,0);
+  assert.equal(event.incomplete,true);
+});
+
+test('no-event wording distinguishes complete dry coverage from missing data',()=>{
+  const p=snowEventPoint();p.forecast.__precipMm3h=[0,0,0];
+  assert.equal(noEventMessage(p,1000,0),'No wintry precipitation in the available forecast');
+  p.forecast.__precipMm3h[1]=null;
+  assert.equal(noEventMessage(p,1000,0),'No wintry precipitation for 3 h');
+  assert.equal(noEventMessage(p,1000,2*3600000),'No wintry precipitation for 1 h');
+  assert.equal(noEventMessage(p,1000,3*3600000),'Outlook unavailable · forecast data missing');
+  assert.equal(noEventMessage(p,null,0),'Wintry outlook unavailable');
+  assert.equal(noEventMessage(p,1000,10*3600000),'Outside available forecast');
+});
+
+test('cached profiles expire and an older model run cannot replace a newer run',()=>{
+  const now=10000000,run=1000000;
+  assert.equal(profileIsFresh(now,run,run,now),true);
+  assert.equal(profileIsFresh(now-PROFILE_CACHE_TTL_MS,run,run,now),false);
+  assert.equal(profileIsFresh(now,run,run+3600000,now),false);
+  assert.equal(profileIsFresh(now+100,run,run,now),false);
+  assert.equal(isOlderRun(run,run+3600000),true);
+  assert.equal(isOlderRun(run+3600000,run),false);
+});

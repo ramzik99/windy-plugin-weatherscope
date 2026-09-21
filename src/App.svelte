@@ -2,11 +2,14 @@
  import {onDestroy} from 'svelte';
  import {diagnostics,verticalProfile,windowSummary,predictability,windComponents} from './diagnostics.mjs';
  import {MODELS,HOUR,finite,normalize,describe,at,value,fieldFor,format,timeLabel,nearestIndex,derived,briefing,compare,requirements} from './engine.mjs';
- export let location=null, timestamp=Date.now(), load, onLocation=()=>{}, onTime=()=>{}, demo=false,mapModel=null,placeName='';
+ export let location=null, timestamp=Date.now(), load, onLocation=()=>{}, onTime=()=>{}, demo=false,mapModel=null,placeName='',winterComponent=null;
  let model='mblue',data=null,busy=false,error='',request=0,view='Brief',search='',group='All',selected=null,settings=false,compareBusy=false,comparisons=[],comparisonErrors=[],compareRequest=0;
- let prefs={temp:'C',wind:'kt',local:false},pins=['temperature','dewPoint','wind','windGust','pressure','precipAmount'],favorites=[],thresholds={gust:15,rain:2};
- try{const saved=JSON.parse(localStorage.getItem('weatherscope-v1')||'{}');prefs={...prefs,...saved.prefs};if(MODELS[saved.model])model=saved.model;if(saved.thresholds&&finite(saved.thresholds.gust)&&saved.thresholds.gust>0&&finite(saved.thresholds.rain)&&saved.thresholds.rain>0)thresholds=saved.thresholds;if(Array.isArray(saved.pins))pins=saved.pins.filter(v=>typeof v==='string').slice(0,12);if(Array.isArray(saved.favorites))favorites=saved.favorites.filter(p=>finite(p.lat)&&finite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180).slice(0,8);}catch{}
- const save=()=>{try{localStorage.setItem('weatherscope-v1',JSON.stringify({prefs,pins,favorites,model,thresholds}));}catch{}};
+ let prefs={temp:'C',wind:'kt',local:false,winterUnits:'metric'},pins=['temperature','dewPoint','wind','windGust','pressure','precipAmount'],favorites=[],thresholds={gust:15,rain:2};
+ try{const saved=JSON.parse(localStorage.getItem('weatherscope-v1')||'{}');prefs={...prefs,...saved.prefs};if(MODELS[saved.model])model=saved.model;if(saved.thresholds&&finite(saved.thresholds.gust)&&saved.thresholds.gust>0&&finite(saved.thresholds.rain)&&saved.thresholds.rain>0)thresholds=saved.thresholds;if(Array.isArray(saved.pins))pins=saved.pins.filter(v=>typeof v==='string').slice(0,12);if(Array.isArray(saved.favorites))favorites=saved.favorites.filter(p=>finite(p.lat)&&finite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180).slice(0,30);}catch{}
+
+ try{const old=JSON.parse(localStorage.getItem('snowline:favourites:v1')||'[]');if(!JSON.parse(localStorage.getItem('weatherscope-v1')||'{}').winterImported&&Array.isArray(old))for(const p of old){const lat=Number(p.lat),lon=Number(p.lon);if(finite(lat)&&finite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&!favorites.some(f=>Math.abs(f.lat-lat)<.0001&&Math.abs(f.lon-lon)<.0001)){favorites=[...favorites,{lat,lon,name:[p.primary,p.secondary].filter(Boolean).join(', ')}].slice(0,30);}}}catch{}
+ const save=()=>{try{localStorage.setItem('weatherscope-v1',JSON.stringify({prefs,pins,favorites,model,thresholds,winterImported:true}));}catch{}};
+ save();
  $: if(location&&model) refresh(location,model);
  async function refresh(loc,source,force=false){const token=++request;compareRequest++;compareBusy=false;busy=true;error='';data=null;selected=null;comparisons=[];comparisonErrors=[];try{const result=await load(source,loc,force);if(token===request)data=result;}catch(e){if(token===request)error=e?.message||'Forecast unavailable. Try again.';}finally{if(token===request)busy=false;}}
  onDestroy(()=>{request++;compareRequest++;});
@@ -35,7 +38,7 @@
  function shortcut(hours){const t=Date.now()+hours*HOUR;const i=data?nearestIndex(data.ts,t): -1;if(i>=0)chooseTime(data.ts[i]);}
  $: isFavorite=!!location&&favorites.some(p=>Math.abs(p.lat-location.lat)<0.0001&&Math.abs(p.lon-location.lon)<0.0001);
  function switchView(name){view=name;if(name==='Compare'&&!comparisons.length&&!compareBusy&&data)compareModels();}
- function favorite(){if(!location)return;const same=p=>Math.abs(p.lat-location.lat)<0.0001&&Math.abs(p.lon-location.lon)<0.0001;favorites=favorites.some(same)?favorites.filter(p=>!same(p)):[...favorites.slice(-7),{...location,name:placeName||''}];save();}
+ function favorite(){if(!location)return;const same=p=>Math.abs(p.lat-location.lat)<0.0001&&Math.abs(p.lon-location.lon)<0.0001;favorites=favorites.some(same)?favorites.filter(p=>!same(p)):[...favorites.slice(-29),{...location,name:placeName||''}];save();}
  async function compareModels(){const token=++compareRequest;compareBusy=true;comparisonErrors=[];const loc={...location};const source=model;const results=await Promise.allSettled(Object.keys(MODELS).filter(m=>m!==source).map(async m=>({m,data:await load(m,loc)})));if(token!==compareRequest)return;comparisons=results.filter(r=>r.status==='fulfilled').map(r=>r.value.data);comparisonErrors=results.flatMap((r,i)=>r.status==='rejected'?[`${Object.keys(MODELS).filter(m=>m!==source)[i]}: ${r.reason?.message||'Unavailable'}`]:[]);compareBusy=false;}
  function download(){if(!data)return;const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),location,selectedTime:new Date(valid).toISOString(),requestedModel:model,forecast:data.raw},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='weatherscope-forecast.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
  const show=(key,t=valid)=>format(value(data,key,t),describe(key).unit,prefs);
@@ -54,16 +57,17 @@
  {#if demo}<div class="notice">DESIGN PREVIEW · Synthetic sample data, not a weather forecast</div>{/if}
  <div class="location"><div><small>YOUR FORECAST POINT</small>{#if placeName}<h2>{placeName}</h2>{/if}<strong>{location?`${location.lat.toFixed(3)}°, ${location.lon.toFixed(3)}°`:'Click a location on Windy'}</strong></div><button on:click={favorite} disabled={!location} title="Save or remove favorite" aria-pressed={isFavorite} class:saved={isFavorite}>{isFavorite?'★ Saved':'☆ Save point'}</button></div>
  {#if favorites.length}<div class="favorites">{#each favorites as place}<button on:click={()=>onLocation({lat:place.lat,lon:place.lon})}>{place.name||`${place.lat.toFixed(2)}, ${place.lon.toFixed(2)}`}</button>{/each}</div>{/if}
- <div class="source"><label>Baseline <select aria-label="Baseline model" bind:value={model} on:change={save}>{#each Object.entries(MODELS) as [key,label]}<option value={key}>{label}{key==='mblue'?' · default':''}</option>{/each}</select></label><button on:click={()=>refresh(location,model,true)} disabled={busy||!location}>↻ Refresh</button></div>
+ {#if view!=='Winter'}<div class="source"><label>Baseline <select aria-label="Baseline model" bind:value={model} on:change={save}>{#each Object.entries(MODELS) as [key,label]}<option value={key}>{label}{key==='mblue'?' · default':''}</option>{/each}</select></label><button on:click={()=>refresh(location,model,true)} disabled={busy||!location}>↻ Refresh</button></div>{/if}
  {#if data&&!busy&&view==='Brief'} <div class="forecast-hero">
   <div><small>{timeLabel(valid,prefs.local)} · {prefs.local?'LOCAL':'UTC'}</small><div class="hero-temperature">{show('temperature')}</div><p>Dew point <b>{show('dewPoint')}</b></p></div>
   <svg class="weather-orbit" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="49"/><circle cx="60" cy="60" r="34"/><path d="M11 60H109M60 11V109"/><path class="orbit-accent" d="M16 76C32 76 34 37 54 37S78 89 104 47"/><circle class="orbit-point" cx="54" cy="37" r="5"/></svg>
   <div class="hero-facts"><div><small>WIND</small><strong>{show('wind')}</strong></div><div><small>GUSTS</small><strong>{show('windGust')}</strong></div><div><small>PRECIPITATION</small><strong>{show('precipAmount')}</strong></div></div>
  </div>
 {/if}
- {#if settings}<div class="settings"><h2>Display preferences</h2><label>Temperature <select bind:value={prefs.temp} on:change={save}><option value="C">°C</option><option value="F">°F</option></select></label><label>Wind <select bind:value={prefs.wind} on:change={save}><option value="kt">Knots</option><option value="ms">m/s</option></select></label><label><input type="checkbox" bind:checked={prefs.local} on:change={save}/> Use this device’s timezone</label><label>Gust signal (m/s) <input type="number" min="1" max="100" bind:value={thresholds.gust} on:change={save}/></label><label>Wet interval (mm/step) <input type="number" min="0.1" max="100" step="0.1" bind:value={thresholds.rain} on:change={save}/></label></div>{/if}
- <nav aria-label="Dashboard views">{#each ['Brief','Profile','Compare','Parameters','Coverage'] as name}<button class:active={view===name} aria-pressed={view===name} on:click={()=>switchView(name)}>{name}</button>{/each}</nav>
- {#if busy}<div class="empty" role="status"><span class="pulse"></span><h2>Reading the atmosphere</h2><p>Loading {MODELS[model]} forecast and profile fields…</p></div>
+ {#if settings}<div class="settings"><h2>Display preferences</h2><label>Winter units <select bind:value={prefs.winterUnits} on:change={save}><option value="metric">Metric (m, cm)</option><option value="imperial">Imperial (ft, in)</option></select></label><label>Temperature <select bind:value={prefs.temp} on:change={save}><option value="C">°C</option><option value="F">°F</option></select></label><label>Wind <select bind:value={prefs.wind} on:change={save}><option value="kt">Knots</option><option value="ms">m/s</option></select></label><label><input type="checkbox" bind:checked={prefs.local} on:change={save}/> Use this device’s timezone</label><label>Gust signal (m/s) <input type="number" min="1" max="100" bind:value={thresholds.gust} on:change={save}/></label><label>Wet interval (mm/step) <input type="number" min="0.1" max="100" step="0.1" bind:value={thresholds.rain} on:change={save}/></label></div>{/if}
+ <nav aria-label="Dashboard views">{#each ['Brief','Winter','Profile','Compare','Parameters','Coverage'] as name}<button class:active={view===name} aria-pressed={view===name} on:click={()=>switchView(name)}>{name}</button>{/each}</nav>
+ {#if view==='Winter'}{#if winterComponent}<svelte:component this={winterComponent} {location} {placeName} units={prefs.winterUnits}/>{:else}<div class="empty"><h2>Wintry Forecast</h2><p>Integrated ECMWF snowline, precipitation type, estimated new snow, 144-hour forecast, sounding and optional map contours. Open the live Windy plugin to use these tools.</p></div>{/if}
+ {:else if busy}<div class="empty" role="status"><span class="pulse"></span><h2>Reading the atmosphere</h2><p>Loading {MODELS[model]} forecast and profile fields…</p></div>
  {:else if error}<div class="empty error" role="alert"><h2>Forecast unavailable</h2><p>{error}</p><button on:click={()=>refresh(location,model,true)}>Try again</button><p>No other model has been substituted.</p></div>
  {:else if data}
  <div class="timebar"><div><small>VALID TIME · {prefs.local?'DEVICE LOCAL':'UTC'}</small><strong>{timeLabel(valid,prefs.local)}</strong></div><div class="shortcuts">{#each [0,6,12,24] as h}<button on:click={()=>shortcut(h)}>{h?'+'+h+'h':'Now'}</button>{/each}</div></div>
@@ -110,7 +114,7 @@
  {#each coverage as row}<div class="coverage"><span class:available={row.available}>{row.available?'✓':'—'}</span><div><strong>{row.label}</strong><small>{row.available?'Returned · '+row.note:row.key?'Not supplied at this time · '+row.note:row.note}</small></div></div>{/each}
  <details><summary>Source metadata & daily summaries</summary><pre>{JSON.stringify({header:data.header,summary:data.summary,celestial:data.raw.celestial},null,2)}</pre></details>
  {/if}
- <footer><span>METEOROLOGICAL WORKSPACE</span><span>WeatherScope 0.3 · {demo?'Preview':'Windy'}</span></footer>
+ <footer><span>METEOROLOGICAL WORKSPACE</span><span>WeatherScope 0.4 · {demo?'Preview':'Windy'}</span></footer>
  {:else}<div class="empty"><h2>Select a location</h2><p>Click the map to load a Meteoblue briefing.</p></div>{/if}
 </section>
 
@@ -133,4 +137,5 @@
  @media(prefers-reduced-motion:reduce){button{transition:none}.pulse{animation:none}}
 
 header{padding-bottom:14px;margin-bottom:10px}.location{margin:12px 0}.source{margin-bottom:12px}.forecast-hero{margin:12px 0 18px}.notice{padding:7px 10px}.weatherscope{padding-top:18px}.hero-temperature{margin:5px 0}.hero-facts{margin-top:14px;padding-top:12px}
+nav{overflow-x:auto}nav button{flex:1 0 auto;min-width:49px}@media(max-width:440px){nav button{font-size:10px;padding:8px 5px}}h1,h2{color:#edf4f8}
 </style>

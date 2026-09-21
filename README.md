@@ -2,15 +2,19 @@
 
 **Every detail. One clear forecast.** A Meteoblue-first point-forecast workspace for Windy.
 
-Version 0.3.1 is published on Windy's hosting and has passed a live Meteoblue point-forecast check. It is available by installation URL; public-gallery review has not been requested.
+Version 0.4.0 is published on Windy's hosting and has passed a live Meteoblue point-forecast check. It is available by installation URL; public-gallery review has not been requested.
 
 ## Install
 
 In [Windy Plugins](https://www.windy.com/plugins), choose **Load plugin directly from URL** and paste:
 
-https://windy-plugins.com/458307/windy-plugin-weatherscope/0.3.1/plugin.min.js
+https://windy-plugins.com/458307/windy-plugin-weatherscope/0.4.0/plugin.min.js
 
 After installation, [open WeatherScope](https://www.windy.com/plugin/weatherscope). See [validation details](VALIDATION.md) for tested coverage and limitations.
+
+## Winter tools
+
+Wintry Forecast is integrated into the **Winter** tab: snowline, terrain-aware precipitation type, estimated new snow, next wintry period, 144-hour forecast, interactive sounding and optional map contours. Uses explicitly labelled ECMWF profiles; the general baseline remains Meteoblue. [Integration details and attribution](WINTER-INTEGRATION.md).
 
 ## At a glance
 
@@ -57,9 +61,10 @@ Windy's access conditions apply. No separate Meteoblue API product is purchased 
 
 The manual **Publish WeatherScope to Windy** GitHub Actions workflow builds and uploads the plugin after a repository secret named `WINDY_API_KEY` is configured with a Windy Plugins API key. Never put that key in source files. See [Windy's publishing instructions](https://docs.windy-plugins.com/getting-started/publishing-plugin.html).
 
-The current configuration is `private: true`, for installation by a share link. Public gallery inclusion is a separate Windy review process. Version 0.3.1 was uploaded directly using Windy's documented endpoint. The optional GitHub workflow has not been configured or run.
+The current configuration is `private: true`, for installation by a share link. Public gallery inclusion is a separate Windy review process. Version 0.4.0 was uploaded directly using Windy's documented endpoint. The optional GitHub workflow has not been configured or run.
 
 ## Attribution
 
 Build tooling is adapted from the [official Windy plugin template](https://github.com/windycom/windy-plugin-template). Its dependencies retain their own licenses. WeatherScope application code is ISC licensed.
+
 

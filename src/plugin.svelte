@@ -5,6 +5,7 @@
  import {singleclick} from '@windy/singleclick';
  import {get as reverseName} from '@windy/reverseName';
  import App from './App.svelte';
+ import Winter from './winter/Winter.svelte';
  import config from './pluginConfig';
  import {fetchForecast} from './adapter.mjs';
  let location=null,timestamp=Date.now(),marker,mapModel=store.get('product'),placeName='',nameRequest=0;
@@ -16,4 +17,4 @@
  onMount(()=>{singleclick.on(config.name,setLocation);store.on('timestamp',onTime);store.on('product',onProduct);if(!location)onopen();});
  onDestroy(()=>{nameRequest++;singleclick.off(config.name,setLocation);store.off('timestamp',onTime);store.off('product',onProduct);marker?.remove();});
 </script>
-<section class="plugin__content" style="padding:0"><App {location} {timestamp} {mapModel} {placeName} load={fetchForecast} onLocation={setLocation} onTime={selectTime}/></section>
+<section class="plugin__content" style="padding:0"><App winterComponent={Winter} {location} {timestamp} {mapModel} {placeName} load={fetchForecast} onLocation={setLocation} onTime={selectTime}/></section>
