@@ -17,4 +17,4 @@ function sample(model){
  return normalize({data,header:{model,refTime:new Date(base-6*HOUR).toISOString(),elevation:250,modelElevation:270,availableLevels:['850h','700h','500h','300h']},sounding,meteogram:{ts,dewPoint:data.dewPoint,cloudBase:ts.map(()=>1200)},summary:[]},model);
 }
 let app;
-app=new App({target:document.getElementById('app'),props:{demo:true,location:{lat:47.56,lon:7.59},timestamp:base,load:async model=>sample(model),onLocation:location=>app.$set({location}),onTime:timestamp=>app.$set({timestamp})}});
+app=new App({target:document.getElementById('app'),props:{demo:true,placeName:'Basel, Switzerland',location:{lat:47.56,lon:7.59},timestamp:base,load:async model=>sample(model),onLocation:location=>app.$set({location}),onTime:timestamp=>app.$set({timestamp})}});

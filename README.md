@@ -2,17 +2,17 @@
 
 **Every detail. One clear forecast.** A Meteoblue-first point-forecast workspace for Windy.
 
-Version 0.2.0 is an early source release. Local tests and builds pass; live Windy plugin responses have not yet been validated. It is not yet published in Windy's plugin gallery.
+Version 0.3.0 is an early source release. Local tests and builds pass; live Windy plugin responses have not yet been validated. It is not yet published in Windy's plugin gallery.
 
 ## At a glance
 
-- Location-following briefing, shared forecast-time slider and 48-hour table.
+- Prominent point-forecast summary, shared time slider, temperature/rain trend and 48-hour table.
 - Meteoblue baseline, with explicit ECMWF, GFS and ICON selection and comparison at identical valid times.
 - Temperature/dew-point profile, wind hodograph and pressure-level table.
 - Calculated K index, Total Totals, 850–500 hPa lapse rate and vector shear, and bracketed freezing-level estimate when required inputs are available above model terrain.
 - Next-24-hour sampled temperature range, complete-interval precipitation total and provider daily predictability when supplied.
 - Search, inspect and pin every returned time-series field; export the complete response as JSON.
-- Coverage checklist, source/run metadata, saved locations, units and UTC/local-time preferences.
+- Coverage checklist, source/run metadata, named saved locations, units and UTC/local-time preferences.
 
 Missing values stay missing. Meteoblue is never silently replaced by another model. Unknown fields retain their raw encoding. Pressure-level shear is not 0–6 km shear, predictability is not rain probability, and the freezing-level estimate is not a snow level.
 
@@ -54,3 +54,4 @@ The current configuration is `private: true`, for installation by a share link. 
 ## Attribution
 
 Build tooling is adapted from the [official Windy plugin template](https://github.com/windycom/windy-plugin-template). Its dependencies retain their own licenses. WeatherScope application code is ISC licensed.
+

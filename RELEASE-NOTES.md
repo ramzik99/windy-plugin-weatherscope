@@ -1,3 +1,7 @@
+# WeatherScope 0.3.0
+
+A redesigned summary, clearer typography, larger controls, sticky navigation and responsive cards. Adds a temperature/rain trend with missing-data gaps preserved, named saved points and automatic model comparisons on opening Compare. Preview verified at desktop and 390px mobile width; live Windy validation remains pending.
+
 # WeatherScope 0.2.0
 
 Meteoblue-first point forecasting for Windy, with source-labelled comparisons and complete returned-field inspection.
@@ -23,3 +27,4 @@ Meteoblue-first point forecasting for Windy, with source-labelled comparisons an
 This release computes selected point-profile diagnostics. It does not claim to deliver a full parcel-ascent analysis, observed station feed, radar feed, or spatial synoptic diagnostics. Raw returned parameters remain available without fabricated values.
 
 Live integration and publication status are recorded in VALIDATION.md.
+
