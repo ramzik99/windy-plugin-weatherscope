@@ -95,7 +95,7 @@
  {#each coverage as row}<div class="coverage"><span class:available={row.available}>{row.available?'✓':'—'}</span><div><strong>{row.label}</strong><small>{row.available?'Returned · '+row.note:row.key?'Not supplied at this time · '+row.note:row.note}</small></div></div>{/each}
  <details><summary>Source metadata & daily summaries</summary><pre>{JSON.stringify({header:data.header,summary:data.summary,celestial:data.raw.celestial},null,2)}</pre></details>
  {/if}
- <footer><span>METEOROLOGICAL WORKSPACE</span><span>WeatherScope 0.6.2 · {demo?'Preview':'Windy'}</span></footer>
+ <footer><span>METEOROLOGICAL WORKSPACE</span><span>WeatherScope 1.0 · {demo?'Preview':'Windy'}</span></footer>
  {:else}<div class="empty"><h2>Select a location</h2><p>Click the map to load a ECMWF briefing.</p></div>{/if}
 </section>
 

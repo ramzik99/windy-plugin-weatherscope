@@ -1,3 +1,7 @@
+# WeatherScope 1.0.0 — Forecast Desk
+
+The first complete WeatherScope release. The elevation workflow is rebuilt as a simple visual sequence: compare real and model terrain, confirm the site height, choose an atmospheric lapse-rate preset, and compare the original forecast with the what-if result. A terrain cross-section, temperature-change scale and clear source/result labels make the height relationship readable at a glance. Professional notes stay collapsed until needed. ECMWF remains the default, all provider values remain intact, and the estimate resets when location or model changes.
+
 # WeatherScope 0.6.2 — Optional elevation temperature estimate
 
 Adds an opt-in, selected-time temperature estimate using terrain or entered elevation and an editable lapse rate, with original and estimated values side by side. Handles negative elevations, inversions, missing inputs, invalid ranges and Celsius/Fahrenheit display; resets assumptions when point or model changes. Provider forecasts remain intact. Also normalizes known model identifiers to remove false ECMWF-versus-ECMWF notices and duplicate comparison sources.

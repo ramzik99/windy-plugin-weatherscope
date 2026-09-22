@@ -61,3 +61,9 @@ Production and preview builds pass. All 77 tests pass, including combined search
 ## 0.6.2 Temperature estimate
 All 84 automated tests and production/preview builds pass. Preview checks cover opt-in default, custom elevation, changed lapse rate, inversion sign, missing/invalid inputs, time-slider updates and reset on model change. Calculations retain precision while results use integer Celsius/Fahrenheit. This is sensitivity analysis under a user-selected assumption; upstream temperature adjustment remains unverified and no forecast skill improvement is claimed.
 Mobile preview at 390px: no horizontal overflow, inputs and comparison card readable. No browser error logs.
+
+## 1.0.0 Visual elevation workflow
+
+The elevation tool now uses a terrain cross-section and a three-step estimate flow with 5.5 °C/km ECMWF-neutral, 6.5 °C/km standard-atmosphere and custom/inversion choices. Original and estimated temperatures remain side by side, with a signed temperature-change scale. Provider data is never overwritten.
+
+All 84 automated tests and both builds pass. Preview checks covered the default 6.5 preset, the 5.5 ECMWF-neutral preset, a 1500 m entered site, a −2 °C/km inversion and an hour change. The what-if value updated at each step, and the displayed integer change matched the two displayed integer temperatures. At a 390 px viewport the expanded three-step workflow had no horizontal overflow. No browser errors were recorded.

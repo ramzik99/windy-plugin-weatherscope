@@ -2,13 +2,13 @@
 
 **Every detail. One clear forecast.** A ECMWF-first point-forecast workspace for Windy.
 
-Version 0.6.2 adds location elevation and model-height comparison. Forecast Desk provides a seven-day overview with provider predictability and expandable meteorological detail. Distribution uses an installation URL; public-gallery review has not been requested.
+Version 1.0.0 is the first complete WeatherScope release: a clear seven-day forecast, full parameter library, meteorological profiles, Winter tools, model comparison, location elevation and an optional visual temperature sensitivity estimate. Distribution uses an installation URL; public-gallery review has not been requested.
 
 ## Install
 
 In [Windy Plugins](https://www.windy.com/plugins), choose **Load plugin directly from URL** and paste:
 
-https://windy-plugins.com/458307/windy-plugin-weatherscope/0.6.2/plugin.min.js
+https://windy-plugins.com/458307/windy-plugin-weatherscope/1.0.0/plugin.min.js
 
 After installation, [open WeatherScope](https://www.windy.com/plugin/weatherscope). See [validation details](VALIDATION.md) for tested coverage and limitations.
 
