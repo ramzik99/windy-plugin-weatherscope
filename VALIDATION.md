@@ -43,3 +43,6 @@ These are regression checks of implemented feature groups, not exhaustive verifi
 My location addition: 74 tests now pass, including valid coordinate order, bounded location request, denied/unavailable/timeout errors and invalid coordinates. The preview loading state and timeout fallback were checked; the prior forecast remains visible. Successful hardware geolocation depends on browser permission and the device location service.
 
 
+
+Final 0.5.1 installed successfully from https://windy-plugins.com/458307/windy-plugin-weatherscope/0.5.1/plugin.min.js. My location succeeded in live Windy and loaded a new point forecast with seven daily rows. The button returned to its ready state. No device coordinates are recorded in this report.
+
