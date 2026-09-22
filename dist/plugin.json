@@ -1,6 +1,6 @@
 {
   "name": "windy-plugin-weatherscope",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "icon": "◉",
   "title": "WeatherScope",
   "author": "Ramzi Kandah",
@@ -12,6 +12,6 @@
   "addToContextmenu": true,
   "listenToSingleclick": true,
   "private": true,
-  "built": 1790062170768,
-  "builtReadable": "2026-09-22T07:29:30.768Z"
+  "built": 1790068934507,
+  "builtReadable": "2026-09-22T09:22:14.507Z"
 }

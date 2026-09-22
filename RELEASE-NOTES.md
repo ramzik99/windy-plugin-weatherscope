@@ -1,3 +1,7 @@
+# WeatherScope 0.6.1 — Location elevation
+
+A compact elevation card shows terrain height and the difference from the selected forecast model. Tap it for model height, data provenance and practical correction guidance. Forecast values remain unchanged. Terrain failures do not block forecasts; requests are cached and guarded against stale location responses. Repaired dependency lock metadata from the installed dependency manifest.
+
 # WeatherScope 0.6.0 — Parameter Library
 
 Adds direct access from the main forecast, multi-word search, category/pressure-level filters, pinned and availability views, and expandable details for every returned field. Creative visuals include mini trends, rainfall bars, a directional compass, percentage rings and a clickable availability timeline. Source metadata, original values and paginated forecast tables are accessible in each field.

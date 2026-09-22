@@ -54,3 +54,6 @@ Production and preview builds pass; all 74 regression tests pass. ECMWF replaces
 ## 0.6.0 Parameter Library
 Production and preview builds pass. All 77 tests pass, including combined search/filter behavior, calm zero versus missing values, bounded summaries and honest unmapped-field explanations. Preview checks covered direct access, combined Wind + 850 hPa filters, expanded temperature trend, direction compass, percentage ring, forecast horizon, pagination and pinned filtering. No console errors were recorded. The detailed view was inspected at 390px, with no document overflow. Temporary viewport override reset.
 
+
+## 0.6.1 Elevation
+79 tests and production/preview builds pass. Tests cover missing heights, sea level, negative elevations, response parsing, cache reuse, exact coordinate keys, invalid coordinates and retry after failure. Preview confirms 250 m terrain versus 270 m model, expandable guidance and keyboard toggle. At 390px the elevation content has no horizontal overflow. Forecast values are not elevation-adjusted by WeatherScope; upstream adjustment status remains unverified.

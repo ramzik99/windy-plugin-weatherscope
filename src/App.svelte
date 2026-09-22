@@ -1,6 +1,7 @@
 <script>
  import {onDestroy} from 'svelte';
  import Explorer from './Explorer.svelte';
+ import Elevation from './Elevation.svelte';
  import Brief from './Brief.svelte';
  import SevenDays from './SevenDays.svelte';
  import ForecastSlider from './ForecastSlider.svelte';
@@ -10,7 +11,7 @@
  import {sourceHealth} from './visuals.mjs';
  import {diagnostics,verticalProfile,windowSummary,predictability,windComponents} from './diagnostics.mjs';
  import {MODELS,HOUR,finite,normalize,describe,at,value,fieldFor,format,timeLabel,nearestIndex,derived,briefing,compare,requirements} from './engine.mjs';
- export let location=null, timestamp=Date.now(), load, onLocation=()=>{}, onTime=()=>{}, demo=false,mapModel=null,placeName='',winterComponent=null;
+ export let loadElevation=null, location=null, timestamp=Date.now(), load, onLocation=()=>{}, onTime=()=>{}, demo=false,mapModel=null,placeName='',winterComponent=null;
  let locating=false,locationError='',locationRequest=0;
  async function useMyLocation(){const token=++locationRequest;locating=true;locationError='';try{const point=await currentPosition();if(token===locationRequest)onLocation(point);}catch(e){if(token===locationRequest)locationError=e.message;}finally{if(token===locationRequest)locating=false;}}
  let model='ecmwf',data=null,busy=false,error='',request=0,view='Brief',search='',group='All',selected=null,settings=false,detailsOpen=false,compareBusy=false,comparisons=[],comparisonErrors=[],compareRequest=0;
@@ -54,6 +55,7 @@
  <header><div class="brand"><span class="mark">◉</span><div><h1>WeatherScope<span>FORECAST DESK</span></h1><p>Every detail. One clear forecast.</p></div></div><button class="icon" aria-label="Settings" title="Settings" on:click={()=>settings=!settings}>⚙</button></header>
  {#if demo}<div class="notice">DESIGN PREVIEW · Synthetic sample data, not a weather forecast</div>{/if}
  <div class="location"><div><small>YOUR FORECAST POINT</small>{#if placeName}<h2>{placeName}</h2>{/if}<strong>{location?`${location.lat.toFixed(3)}°, ${location.lon.toFixed(3)}°`:'Click a location on Windy'}</strong></div><div class="point-actions"><button on:click={useMyLocation} disabled={locating} aria-label="My location">{locating?'Locating…':'◎ My location'}</button><button on:click={favorite} disabled={!location} title="Save or remove favorite" aria-pressed={isFavorite} class:saved={isFavorite}>{isFavorite?'★ Saved':'☆ Save point'}</button></div></div>
+ <Elevation {location} load={loadElevation} modelElevation={data?.header?.modelElevation} model={served}/>
  {#if locationError}<p class="notice" role="alert">{locationError}</p>{/if}
  {#if favorites.length}<div class="favorites">{#each favorites as place}<button on:click={()=>onLocation({lat:place.lat,lon:place.lon})}>{place.name||`${place.lat.toFixed(2)}, ${place.lon.toFixed(2)}`}</button>{/each}</div>{/if}
  <div class="source">{#if view==='Winter'}<small>Winter source: ECMWF</small>{:else}<label>Baseline <select aria-label="Baseline model" bind:value={model} on:change={save}>{#each Object.entries(MODELS) as [key,label]}<option value={key}>{label}{key==='ecmwf'?' · default':''}</option>{/each}</select></label>{/if}<button on:click={()=>refresh(location,model,true)} disabled={busy||!location||view==='Winter'}>↻ Refresh</button><button aria-expanded={detailsOpen} on:click={()=>detailsOpen=!detailsOpen}>Details {detailsOpen?'−':'+'}</button></div>
@@ -93,7 +95,7 @@
  {#each coverage as row}<div class="coverage"><span class:available={row.available}>{row.available?'✓':'—'}</span><div><strong>{row.label}</strong><small>{row.available?'Returned · '+row.note:row.key?'Not supplied at this time · '+row.note:row.note}</small></div></div>{/each}
  <details><summary>Source metadata & daily summaries</summary><pre>{JSON.stringify({header:data.header,summary:data.summary,celestial:data.raw.celestial},null,2)}</pre></details>
  {/if}
- <footer><span>METEOROLOGICAL WORKSPACE</span><span>WeatherScope 0.6.0 · {demo?'Preview':'Windy'}</span></footer>
+ <footer><span>METEOROLOGICAL WORKSPACE</span><span>WeatherScope 0.6.1 · {demo?'Preview':'Windy'}</span></footer>
  {:else}<div class="empty"><h2>Select a location</h2><p>Click the map to load a ECMWF briefing.</p></div>{/if}
 </section>
 
