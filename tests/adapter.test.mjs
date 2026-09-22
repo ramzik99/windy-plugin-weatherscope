@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const source=(await readFile(new URL('../src/adapter.mjs',import.meta.url),'utf8')).replace("import {getPointForecastData} from '@windy/fetch';",`export const requests=[]; async function getPointForecastData(...args){requests.push(args);return {data:{header:{model:args[0]},data:{ts:[Date.UTC(2026,8,22)],temperature:[290]}}};}`).replace("'./engine.mjs'",JSON.stringify(new URL('../src/engine.mjs',import.meta.url).href));
+const adapter=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+test('forecast requests cover seven calendar days plus boundary, hourly, and refresh bypasses cache',async()=>{const p={lat:32,lon:36};await adapter.fetchForecast('mblue',p);assert.equal(adapter.requests[0][1].days,8);assert.equal(adapter.requests[0][1].step,1);assert.equal(adapter.requests[0][2].summary,true);await adapter.fetchForecast('mblue',p);assert.equal(adapter.requests.length,1);await adapter.fetchForecast('mblue',p,true);assert.equal(adapter.requests.length,2);await adapter.fetchForecast('ecmwf',p);assert.equal(adapter.requests.length,3);});

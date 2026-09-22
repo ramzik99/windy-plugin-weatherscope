@@ -41,7 +41,9 @@ export function format(v,unit,prefs={}){
  if(unit==='K'){n=v-273.15;u='°C';if(prefs.temp==='F'){n=n*1.8+32;u='°F';}}
  if(unit==='Pa'){n=v/100;u='hPa';}
  if(unit==='m/s'&&prefs.wind!=='ms'){n=v*1.943844;u='kt';}
- return `${Number(n.toFixed(unit==='°'?0:1))}${u==='raw'?' (raw)':u==='code'?' (code)':' '+u}`;
+ // Round presentation only. Preserve trace precipitation and all raw calculations.
+ const displayed=n>0&&n<1&&/^mm|^cm|^in\//.test(unit)?'<1':String(Math.round(n)||0);
+ return `${displayed}${u==='raw'?' (raw)':u==='code'?' (code)':' '+u}`;
 }
 export function timeLabel(time,local=false){return new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',...(local?{}:{timeZone:'UTC'})}).format(new Date(time));}
 export function derived(data,time){

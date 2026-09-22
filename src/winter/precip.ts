@@ -118,10 +118,7 @@ export function precipPeriodLabel(data: Record<string, unknown>): string {
     : 'Precipitation: 3-hour totals';
 }
 
-export function formatPrecipMm(mm: number): string {
-  if (mm < 0.005) return '0';
-  if (mm < 0.1) return mm.toFixed(2).replace(/0$/, '');
-  if (mm < 1) return mm.toFixed(1);
-  if (mm < 10) return mm.toFixed(1).replace(/\.0$/, '');
-  return String(Math.round(mm));
+export function formatPrecipMm(value: number | null): string {
+ if(value===null||!Number.isFinite(value))return '—';
+ return (value>0&&value<1?'<1':String(Math.round(value)))+'';
 }

@@ -47,8 +47,7 @@ export function snowDepthCmAt(forecast: Record<string, unknown>, index: number):
   return null;
 }
 
-export function formatSnowDepthCm(value: number): string {
-  if (!Number.isFinite(value)) return '—';
-  if (value < 10) return value.toFixed(1);
-  return String(Math.round(value));
+export function formatSnowDepthCm(value: number | null): string {
+ if(value===null||!Number.isFinite(value))return '—';
+ return (value>0&&value<1?'<1':String(Math.round(value)))+'';
 }

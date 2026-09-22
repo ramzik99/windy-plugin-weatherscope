@@ -90,7 +90,6 @@ export async function currentMapSnowDepthCm(
 }
 
 export function formatMapSnowDepthCm(value: number | null): string {
-  if (value === null || !Number.isFinite(value)) return '—';
-  if (value < 1) return `${value.toFixed(1)} cm`;
-  return `${value.toFixed(0)} cm`;
+ if(value===null||!Number.isFinite(value))return '—';
+ return (value>0&&value<1?'<1':String(Math.round(value)))+' cm';
 }

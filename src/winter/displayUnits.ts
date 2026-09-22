@@ -24,12 +24,12 @@ export function formatElevation(m: number | null, units: UnitSystem, stepM = 10)
 
 export function formatSnow(cm: number | null, units: UnitSystem): string {
   if (cm === null || !Number.isFinite(cm)) return '—';
-  if (cm < 0.05) return 'None';
+  if (cm === 0) return 'None';
   if (units === 'imperial') {
     const value = cmToInches(cm);
-    return value < 4 ? `${value.toFixed(1).replace(/\.0$/, '')} in` : `${Math.round(value)} in`;
+    return `${value>0&&value<1?'<1':Math.round(value)} in`;
   }
-  return cm < 10 ? `${cm.toFixed(1).replace(/\.0$/, '')} cm` : `${Math.round(cm)} cm`;
+  return `${cm>0&&cm<1?'<1':Math.round(cm)} cm`;
 }
 
 export function formatPrecip(mm3h: number | null, units: UnitSystem): string {
@@ -37,13 +37,13 @@ export function formatPrecip(mm3h: number | null, units: UnitSystem): string {
   const hourly = mm3h;
   if (units === 'imperial') {
     const value = mmToInches(hourly);
-    return `${value < 0.1 ? value.toFixed(2) : value.toFixed(1)} in/3h`;
+    return `${value>0&&value<1?'<1':Math.round(value)} in/3h`;
   }
-  return `${hourly < 10 ? hourly.toFixed(2).replace(/\.?0+$/, '') : Math.round(hourly)} mm/3h`;
+  return `${hourly>0&&hourly<1?'<1':Math.round(hourly)} mm/3h`;
 }
 
 export function formatTemperature(c: number | null, units: UnitSystem, digits = 1): string {
   if (c === null || !Number.isFinite(c)) return '—';
   const value = units === 'imperial' ? cToF(c) : c;
-  return `${value.toFixed(digits)}°${units === 'imperial' ? 'F' : 'C'}`;
+  return `${Math.round(value)||0}°${units === 'imperial' ? 'F' : 'C'}`;
 }

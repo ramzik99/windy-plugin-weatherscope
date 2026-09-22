@@ -3,6 +3,7 @@
  import Explorer from './Explorer.svelte';
  import Brief from './Brief.svelte';
  import SevenDays from './SevenDays.svelte';
+ import ForecastSlider from './ForecastSlider.svelte';
  import Meteorology from './Meteorology.svelte';
  import {sourceHealth} from './visuals.mjs';
  import {diagnostics,verticalProfile,windowSummary,predictability,windComponents} from './diagnostics.mjs';
@@ -61,7 +62,7 @@
  {#if view==='Brief'}<SevenDays {data} {prefs} {valid} onTime={chooseTime}/>{/if}
  <div class="timebar"><div><small>VALID TIME · {prefs.local?'DEVICE LOCAL':'UTC'}</small><strong>{timeLabel(valid,prefs.local)}</strong></div><div class="shortcuts">{#each [0,6,12,24] as h}<button on:click={()=>shortcut(h)}>{h?'+'+h+'h':'Now'}</button>{/each}</div></div>
  {#if index<0}<div class="notice">Selected time is outside the returned forecast range. Choose a time below.</div>{/if}
- <label class="time-slider"><span>Explore forecast</span><span>Drag to change time</span><input aria-label="Forecast time" type="range" min="0" max={data.ts.length-1} value={Math.max(0,index)} on:input={e=>chooseTime(data.ts[Number(e.currentTarget.value)])}/></label>
+ <ForecastSlider ts={data.ts} {valid} local={prefs.local} onTime={chooseTime}/>
  <details class="source-details"><summary>{served} · {health.age===null?'Run time unavailable':health.age<0?'Check provider run time':'Run '+Math.round(health.age)+'h ago'}</summary><p>{health.available}/{health.total} numeric fields available at this time. {health.lead===null?'Forecast lead unavailable.':'Forecast lead '+Math.round(health.lead)+'h.'}</p><p>{Number.isFinite(Date.parse(data.header.refTime))?'Provider run: '+timeLabel(Date.parse(data.header.refTime),false)+' UTC':'Provider run timestamp missing or invalid'}</p></details>
  {#if mapModel&&mapModel!==data.model}<p class="footnote">Panel: {served} · Windy map: {MODELS[mapModel]||mapModel}. These sources are separate.</p>{/if}
  {#if data.model!==model}<div class="notice">Requested {MODELS[model]}; provider returned {served}.</div>{/if}
@@ -90,7 +91,7 @@
  {#each coverage as row}<div class="coverage"><span class:available={row.available}>{row.available?'✓':'—'}</span><div><strong>{row.label}</strong><small>{row.available?'Returned · '+row.note:row.key?'Not supplied at this time · '+row.note:row.note}</small></div></div>{/each}
  <details><summary>Source metadata & daily summaries</summary><pre>{JSON.stringify({header:data.header,summary:data.summary,celestial:data.raw.celestial},null,2)}</pre></details>
  {/if}
- <footer><span>METEOROLOGICAL WORKSPACE</span><span>WeatherScope 0.5 · {demo?'Preview':'Windy'}</span></footer>
+ <footer><span>METEOROLOGICAL WORKSPACE</span><span>WeatherScope 0.5.1 · {demo?'Preview':'Windy'}</span></footer>
  {:else}<div class="empty"><h2>Select a location</h2><p>Click the map to load a Meteoblue briefing.</p></div>{/if}
 </section>
 

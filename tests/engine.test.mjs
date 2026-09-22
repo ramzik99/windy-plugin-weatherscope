@@ -12,3 +12,7 @@ test('malformed timestamps rejected',()=>{assert.throws(()=>normalize({...payloa
 test('actual served model retained',()=>{assert.equal(normalize({...payload,header:{model:'gfs'}},'mblue').model,'gfs');});
 test('profile and surface values must have identical valid times',()=>{const d=normalize({...payload,meteogram:{ts:[t+HOUR],dewPoint:[283.15]}},'mblue');assert.equal(value(d,'dewPoint',t),null);assert.equal(derived(d,t).some(f=>f.key==='rh'),false);});
 test('duplicate served sources do not inflate comparison count',()=>{const d=normalize(payload,'mblue');assert.equal(compare([d,d],'temperature',t).entries.length,1);assert.equal(compare([d,d],'temperature',t).spread,null);});
+
+test('whole-number display preserves trace amounts, missing values and calculation precision',()=>{
+ assert.equal(format(293.76,'K'),'21 °C');assert.equal(format(100153,'Pa'),'1002 hPa');assert.equal(format(.2,'mm'),'<1 mm');assert.equal(format(0,'mm'),'0 mm');assert.equal(format(-.1,'°C/km'),'0 °C/km');assert.equal(format(2.25,'m/s',{wind:'ms'}),'2 m/s');assert.equal(value(normalize(payload,'mblue'),'temperature',t),293.15);
+});

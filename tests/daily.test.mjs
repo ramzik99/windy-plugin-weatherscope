@@ -17,3 +17,12 @@ test('invalid, missing, overlapping or misaligned predictability stays unavailab
  d.summary=[{index:0,segments:8,predictability:0}];assert.equal(sevenDays(d,start)[0].predictability,0);
  d.summary.push({...d.summary[0]});assert.equal(sevenDays(d,start)[0].predictability,null);
 });
+
+test('provider calendar keeps daily extremes and predictability together across device timezones',()=>{
+ const d=fixture(),dayStart=start-2*HOUR;d.header.utcOffset=2;
+ d.summary=Array.from({length:7},(_,i)=>({timestamp:dayStart+i*24*HOUR,index:i*8,segments:8,tempMin:275+i,tempMax:295+i,predictability:94-i}));
+ const utc=sevenDays(d,start,false),local=sevenDays(d,start,true);
+ assert.deepEqual(local,utc);assert.equal(utc[0].start,dayStart);assert.equal(utc[0].low,275);assert.equal(utc[0].high,295);assert.equal(utc[1].predictability,93);assert.equal(utc[6].predictability,88);
+ d.summary[0].tempMax=270;assert.equal(sevenDays(d,start)[0].providerRange,false);
+});
+test('dated summaries never borrow a neighboring day score',()=>{const d=fixture();d.header.utcOffset=2;d.summary=[{timestamp:start+22*HOUR,tempMin:280,tempMax:290,predictability:91}];assert.equal(sevenDays(d,start)[0].predictability,null);assert.equal(sevenDays(d,start)[1].predictability,91);});
