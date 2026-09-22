@@ -1,5 +1,5 @@
 export const HOUR=3600000;
-export const MODELS={mblue:'Meteoblue',ecmwf:'ECMWF',gfs:'GFS',icon:'ICON'};
+export const MODELS={ecmwf:'ECMWF',gfs:'GFS',icon:'ICON'};
 export const finite=v=>typeof v==='number'&&Number.isFinite(v);
 const defs={
  temperature:['Temperature','K','Surface'],feelTemperature:['Feels like','K','Surface'],dewPoint:['Dew point','K','Moisture'],

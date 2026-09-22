@@ -1,32 +1,32 @@
 # WeatherScope
 
-**Every detail. One clear forecast.** A Meteoblue-first point-forecast workspace for Windy.
+**Every detail. One clear forecast.** A ECMWF-first point-forecast workspace for Windy.
 
-Version 0.5.1 is published and live-checked on Windy's hosting. Forecast Desk provides a seven-day overview with provider predictability and expandable meteorological detail. Distribution uses an installation URL; public-gallery review has not been requested.
+Version 0.5.2 is published and live-checked on Windy's hosting. Forecast Desk provides a seven-day overview with provider predictability and expandable meteorological detail. Distribution uses an installation URL; public-gallery review has not been requested.
 
 ## Install
 
 In [Windy Plugins](https://www.windy.com/plugins), choose **Load plugin directly from URL** and paste:
 
-https://windy-plugins.com/458307/windy-plugin-weatherscope/0.5.1/plugin.min.js
+https://windy-plugins.com/458307/windy-plugin-weatherscope/0.5.2/plugin.min.js
 
 After installation, [open WeatherScope](https://www.windy.com/plugin/weatherscope). See [validation details](VALIDATION.md) for tested coverage and limitations.
 
 ## Winter tools
 
-Wintry Forecast is integrated into the **Details → Winter** tool: snowline, terrain-aware precipitation type, estimated new snow, next wintry period, 144-hour forecast, interactive sounding and optional map contours. Uses explicitly labelled ECMWF profiles; the general baseline remains Meteoblue. [Integration details and attribution](WINTER-INTEGRATION.md).
+Wintry Forecast is integrated into the **Details → Winter** tool: snowline, terrain-aware precipitation type, estimated new snow, next wintry period, 144-hour forecast, interactive sounding and optional map contours. Uses explicitly labelled ECMWF profiles; the general baseline remains ECMWF. [Integration details and attribution](WINTER-INTEGRATION.md).
 
 ## At a glance
 
-- Seven-day overview with shared-scale temperature range bars, complete-day precipitation and aligned Meteoblue predictability. Select a day for detail. Daily summaries use the forecast point calendar; hourly controls use your selected display timezone.
-- Meteoblue baseline, with explicit ECMWF, GFS and ICON selection and comparison at identical valid times.
+- Seven-day overview with shared-scale temperature range bars, complete-day precipitation and provider-supplied predictability when available. Select a day for detail. Daily summaries use the forecast point calendar; hourly controls use your selected display timezone.
+- ECMWF baseline, with GFS and ICON selection and comparison at identical valid times.
 - Temperature/dew-point profile, wind hodograph and pressure-level table.
 - Calculated K index, Total Totals, 850–500 hPa lapse rate and vector shear, and bracketed freezing-level estimate when required inputs are available above model terrain.
 - Expandable Meteorology: surface diagnostics, temperature/dew-point profile, pressure-level table, calculations and exact-time model comparison. A 24-hour temperature chart and collapsible interval table keep the main view simple.
 - Search, inspect and pin every returned time-series field; export the complete response as JSON.
 - Coverage checklist, source/run metadata, named saved locations, units and UTC/local-time preferences.
 
-Weather values display as integers, with positive precipitation below one unit shown as <1. Raw exports and calculations retain full precision. The timeline includes Previous/Next buttons, date endpoints and keyboard control. Missing values stay missing. Meteoblue is never silently replaced by another model. Unknown fields retain their raw encoding. Pressure-level shear is not 0–6 km shear, predictability is not rain probability, and the freezing-level estimate is not a snow level.
+Weather values display as integers, with positive precipitation below one unit shown as <1. Raw exports and calculations retain full precision. The timeline includes Previous/Next buttons, date endpoints and keyboard control. Missing values stay missing. ECMWF is never silently replaced by another model. Unknown fields retain their raw encoding. Pressure-level shear is not 0–6 km shear, predictability is not rain probability, and the freezing-level estimate is not a snow level.
 
 See [parameter coverage](PARAMETER-AUDIT.md), [validation status](VALIDATION.md) and [release notes](RELEASE-NOTES.md). CAPE/CIN, parcel diagnostics, SRH, observations and spatial diagnostics are not implemented.
 
@@ -55,7 +55,7 @@ The preview server opens at http://127.0.0.1:9998. Compiled plugin files are in 
 3. Sign in to https://www.windy.com/developer-mode and load that local plugin URL.
 4. Open WeatherScope, select a point and inspect **Coverage** and **Parameters** to verify the actual fields available for your account and location.
 
-Windy's access conditions apply. No separate Meteoblue API product is purchased or connected.
+Windy's access conditions apply. No separate ECMWF API product is purchased or connected.
 
 ## Publish future versions
 

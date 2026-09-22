@@ -46,3 +46,7 @@ My location addition: 74 tests now pass, including valid coordinate order, bound
 
 Final 0.5.1 installed successfully from https://windy-plugins.com/458307/windy-plugin-weatherscope/0.5.1/plugin.min.js. My location succeeded in live Windy and loaded a new point forecast with seven daily rows. The button returned to its ready state. No device coordinates are recorded in this report.
 
+
+## 0.5.2 ECMWF default
+Production and preview builds pass; all 74 regression tests pass. ECMWF replaces Meteoblue in initial selection; existing preferences migrate once using baselineVersion 2, preserving other settings. Meteoblue is excluded from the available model list and comparisons.
+

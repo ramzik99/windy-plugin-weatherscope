@@ -1,7 +1,7 @@
 {
   "name": "windy-plugin-weatherscope",
-  "version": "0.5.1",
-  "description": "Meteorological dashboard with Meteoblue baseline",
+  "version": "0.5.2",
+  "description": "Meteorological dashboard with ECMWF baseline",
   "main": "dist/plugin.min.js",
   "type": "module",
   "scripts": {

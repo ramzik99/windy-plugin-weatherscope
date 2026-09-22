@@ -713,7 +713,7 @@
 		(window.__svelte || (window.__svelte = { v: new Set() })).v.add(PUBLIC_VERSION);
 
 	const HOUR=3600000;
-	const MODELS={mblue:'Meteoblue',ecmwf:'ECMWF',gfs:'GFS',icon:'ICON'};
+	const MODELS={ecmwf:'ECMWF',gfs:'GFS',icon:'ICON'};
 	const finite=v=>typeof v==='number'&&Number.isFinite(v);
 	const defs={
 	 temperature:['Temperature','K','Surface'],feelTemperature:['Feels like','K','Surface'],dewPoint:['Dew point','K','Moisture'],
@@ -5031,7 +5031,7 @@
 		};
 	}
 
-	// (32:129) {#each comparisonErrors as error}
+	// (32:89) {#each comparisonErrors as error}
 	function create_each_block$1(ctx) {
 		let p;
 		let t_1_value = /*error*/ ctx[19] + "";
@@ -5251,7 +5251,7 @@
 
 				t35 = space();
 				p3 = element("p");
-				p3.textContent = "Temperature · same point and exact time. Model differences are not probabilities; Meteoblue may incorporate these models.";
+				p3.textContent = "Temperature · same point and exact time. Model differences are not probabilities.";
 
 				for (let i = 0; i < each_blocks.length; i += 1) {
 					each_blocks[i].c();
@@ -6091,7 +6091,7 @@
 		let option;
 		let t0_value = /*label*/ ctx[124] + "";
 		let t0;
-		let t1_value = (/*key*/ ctx[90] === 'mblue' ? ' · default' : '') + "";
+		let t1_value = (/*key*/ ctx[90] === 'ecmwf' ? ' · default' : '') + "";
 		let t1;
 
 		return {
@@ -6470,7 +6470,7 @@
 		return {
 			c() {
 				div = element("div");
-				div.innerHTML = `<h2 class="svelte-1lzjpb4">Select a location</h2><p class="svelte-1lzjpb4">Click the map to load a Meteoblue briefing.</p>`;
+				div.innerHTML = `<h2 class="svelte-1lzjpb4">Select a location</h2><p class="svelte-1lzjpb4">Click the map to load a ECMWF briefing.</p>`;
 				attr(div, "class", "empty svelte-1lzjpb4");
 			},
 			m(target, anchor) {
@@ -6646,7 +6646,7 @@
 				span0 = element("span");
 				span0.textContent = "METEOROLOGICAL WORKSPACE";
 				span1 = element("span");
-				t22 = text("WeatherScope 0.5.1 · ");
+				t22 = text("WeatherScope 0.5.2 · ");
 				t23 = text(t23_value);
 				attr(small, "class", "svelte-1lzjpb4");
 				attr(strong, "class", "svelte-1lzjpb4");
@@ -7700,7 +7700,7 @@
 				button = element("button");
 				t1 = text(t1_value);
 				p_1 = element("p");
-				p_1.textContent = "Same location and exact valid time. Spread describes disagreement, not forecast probability. Meteoblue may incorporate the other models, so these are not independent ensemble members.";
+				p_1.textContent = "Same location and exact valid time. Spread describes disagreement, not forecast probability. These deterministic models are not an ensemble probability distribution.";
 				t3 = space();
 
 				for (let i = 0; i < 4; i += 1) {
@@ -9816,7 +9816,7 @@
 			}
 		}
 
-		let model = 'mblue',
+		let model = 'ecmwf',
 			data = null,
 			busy = false,
 			error = '',
@@ -9845,7 +9845,7 @@
 		try {
 			const saved = JSON.parse(localStorage.getItem('weatherscope-v1') || '{}');
 			prefs = { ...prefs, ...saved.prefs };
-			if (MODELS[saved.model]) model = saved.model;
+			if (saved.baselineVersion === 2 && MODELS[saved.model]) model = saved.model;
 			if (saved.thresholds && finite(saved.thresholds.gust) && saved.thresholds.gust > 0 && finite(saved.thresholds.rain) && saved.thresholds.rain > 0) thresholds = saved.thresholds;
 			if (Array.isArray(saved.pins)) pins = saved.pins.filter(v => typeof v === 'string').slice(0, 12);
 			if (Array.isArray(saved.favorites)) favorites = saved.favorites.filter(p => finite(p.lat) && finite(p.lon) && Math.abs(p.lat) <= 90 && Math.abs(p.lon) <= 180).slice(0, 30);
@@ -9882,7 +9882,8 @@
 					favorites,
 					model,
 					thresholds,
-					winterImported: true
+					winterImported: true,
+					baselineVersion: 2
 				}));
 			} catch {
 				
@@ -10300,7 +10301,7 @@
 
 	const base=Math.floor(Date.now()/(3*HOUR))*3*HOUR;
 	function sample(model){
-	 const offset={mblue:0,ecmwf:1,gfs:-1.8,icon:.5}[model]||0;
+	 const offset={ecmwf:0,gfs:-1.8,icon:.5}[model]||0;
 	 const ts=Array.from({length:65},(_,i)=>base+(i-2)*3*HOUR);
 	 const temperatures=ts.map((_,i)=>273.15+16+5*Math.sin(i/3)+offset);
 	 const data={ts,temperature:temperatures,dewPoint:temperatures.map(t=>t-6),wind:ts.map((_,i)=>6+4*Math.sin(i/4)**2),windDir:ts.map((_,i)=>(220+i*4)%360),windGust:ts.map((_,i)=>12+6*Math.sin(i/4)**2),pressure:ts.map((_,i)=>101300-i*35),precipAmount:ts.map((_,i)=>i>4&&i<9?2.4:0),precipSnowAmount:ts.map(()=>0),precipConvectiveAmount:ts.map(()=>0)};
@@ -10312,7 +10313,7 @@
 	  sounding[`rh-${p}h`]=ts.map(()=>60);sounding[`wind-${p}h`]=ts.map((_,i)=>6+z*.003+Math.sin(i)*2);
 	  sounding[`windDir-${p}h`]=ts.map(()=>240);sounding[`gh-${p}h`]=ts.map(()=>z);sounding[`cloud-${p}h`]=ts.map(()=>p===700?65:15);
 	 }
-	 return normalize({data,header:{model,utcOffset:2,refTime:new Date(base-6*HOUR).toISOString(),elevation:250,modelElevation:270,availableLevels:['850h','700h','500h','300h']},sounding,meteogram:{ts,dewPoint:data.dewPoint,cloudBase:ts.map(()=>1200)},summary:model==='mblue'?Object.values(ts.reduce((days,t,i)=>{const key=new Date(t+2*HOUR).toISOString().slice(0,10);if(!days[key])days[key]={timestamp:Date.parse(key)-2*HOUR,index:i,segments:0,predictability:Math.max(45,93-Object.keys(days).length*6)};days[key].segments++;return days;},{})):[]},model);
+	 return normalize({data,header:{model,utcOffset:2,refTime:new Date(base-6*HOUR).toISOString(),elevation:250,modelElevation:270,availableLevels:['850h','700h','500h','300h']},sounding,meteogram:{ts,dewPoint:data.dewPoint,cloudBase:ts.map(()=>1200)},summary:model==='ecmwf'?Object.values(ts.reduce((days,t,i)=>{const key=new Date(t+2*HOUR).toISOString().slice(0,10);if(!days[key])days[key]={timestamp:Date.parse(key)-2*HOUR,index:i,segments:0,predictability:Math.max(45,93-Object.keys(days).length*6)};days[key].segments++;return days;},{})):[]},model);
 	}
 	let app;
 	app=new App({target:document.getElementById('app'),props:{demo:true,placeName:'Basel, Switzerland',location:{lat:47.56,lon:7.59},timestamp:base,load:async model=>sample(model),onLocation:location=>app.$set({location}),onTime:timestamp=>app.$set({timestamp})}});

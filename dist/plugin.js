@@ -1,19 +1,19 @@
 const __pluginConfig =  {
   "name": "windy-plugin-weatherscope",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "icon": "◉",
   "title": "WeatherScope",
   "author": "Ramzi Kandah",
   "repository": "https://github.com/ramzik99/windy-plugin-weatherscope",
-  "description": "Every detail. One clear forecast. Meteoblue baseline and complete returned-parameter explorer.",
+  "description": "Every detail. One clear forecast. ECMWF baseline and complete returned-parameter explorer.",
   "desktopUI": "rhpane",
   "mobileUI": "fullscreen",
   "routerPath": "/weatherscope/:lat?/:lon?",
   "addToContextmenu": true,
   "listenToSingleclick": true,
   "private": true,
-  "built": 1790060721989,
-  "builtReadable": "2026-09-22T07:05:21.989Z"
+  "built": 1790061120881,
+  "builtReadable": "2026-09-22T07:12:00.882Z"
 };
 
 // transformCode: import { map } from '@windy/map';
@@ -849,7 +849,7 @@ if (typeof window !== 'undefined')
 	(window.__svelte || (window.__svelte = { v: new Set() })).v.add(PUBLIC_VERSION);
 
 const HOUR$1=3600000;
-const MODELS={mblue:'Meteoblue',ecmwf:'ECMWF',gfs:'GFS',icon:'ICON'};
+const MODELS={ecmwf:'ECMWF',gfs:'GFS',icon:'ICON'};
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 const defs={
  temperature:['Temperature','K','Surface'],feelTemperature:['Feels like','K','Surface'],dewPoint:['Dew point','K','Moisture'],
@@ -5167,7 +5167,7 @@ function create_each_block_1$3(ctx) {
 	};
 }
 
-// (32:129) {#each comparisonErrors as error}
+// (32:89) {#each comparisonErrors as error}
 function create_each_block$3(ctx) {
 	let p;
 	let t_1_value = /*error*/ ctx[19] + "";
@@ -5387,7 +5387,7 @@ function create_fragment$5(ctx) {
 
 			t35 = space();
 			p3 = element("p");
-			p3.textContent = "Temperature · same point and exact time. Model differences are not probabilities; Meteoblue may incorporate these models.";
+			p3.textContent = "Temperature · same point and exact time. Model differences are not probabilities.";
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].c();
@@ -6227,7 +6227,7 @@ function create_each_block_15(ctx) {
 	let option;
 	let t0_value = /*label*/ ctx[124] + "";
 	let t0;
-	let t1_value = (/*key*/ ctx[90] === 'mblue' ? ' · default' : '') + "";
+	let t1_value = (/*key*/ ctx[90] === 'ecmwf' ? ' · default' : '') + "";
 	let t1;
 
 	return {
@@ -6606,7 +6606,7 @@ function create_else_block_2$1(ctx) {
 	return {
 		c() {
 			div = element("div");
-			div.innerHTML = `<h2 class="svelte-1lzjpb4">Select a location</h2><p class="svelte-1lzjpb4">Click the map to load a Meteoblue briefing.</p>`;
+			div.innerHTML = `<h2 class="svelte-1lzjpb4">Select a location</h2><p class="svelte-1lzjpb4">Click the map to load a ECMWF briefing.</p>`;
 			attr(div, "class", "empty svelte-1lzjpb4");
 		},
 		m(target, anchor) {
@@ -6782,7 +6782,7 @@ function create_if_block_4$3(ctx) {
 			span0 = element("span");
 			span0.textContent = "METEOROLOGICAL WORKSPACE";
 			span1 = element("span");
-			t22 = text("WeatherScope 0.5.1 · ");
+			t22 = text("WeatherScope 0.5.2 · ");
 			t23 = text(t23_value);
 			attr(small, "class", "svelte-1lzjpb4");
 			attr(strong, "class", "svelte-1lzjpb4");
@@ -7836,7 +7836,7 @@ function create_if_block_10$1(ctx) {
 			button = element("button");
 			t1 = text(t1_value);
 			p_1 = element("p");
-			p_1.textContent = "Same location and exact valid time. Spread describes disagreement, not forecast probability. Meteoblue may incorporate the other models, so these are not independent ensemble members.";
+			p_1.textContent = "Same location and exact valid time. Spread describes disagreement, not forecast probability. These deterministic models are not an ensemble probability distribution.";
 			t3 = space();
 
 			for (let i = 0; i < 4; i += 1) {
@@ -9952,7 +9952,7 @@ function instance$4($$self, $$props, $$invalidate) {
 		}
 	}
 
-	let model = 'mblue',
+	let model = 'ecmwf',
 		data = null,
 		busy = false,
 		error = '',
@@ -9981,7 +9981,7 @@ function instance$4($$self, $$props, $$invalidate) {
 	try {
 		const saved = JSON.parse(localStorage.getItem('weatherscope-v1') || '{}');
 		prefs = { ...prefs, ...saved.prefs };
-		if (MODELS[saved.model]) model = saved.model;
+		if (saved.baselineVersion === 2 && MODELS[saved.model]) model = saved.model;
 		if (saved.thresholds && finite(saved.thresholds.gust) && saved.thresholds.gust > 0 && finite(saved.thresholds.rain) && saved.thresholds.rain > 0) thresholds = saved.thresholds;
 		if (Array.isArray(saved.pins)) pins = saved.pins.filter(v => typeof v === 'string').slice(0, 12);
 		if (Array.isArray(saved.favorites)) favorites = saved.favorites.filter(p => finite(p.lat) && finite(p.lon) && Math.abs(p.lat) <= 90 && Math.abs(p.lon) <= 180).slice(0, 30);
@@ -10018,7 +10018,8 @@ function instance$4($$self, $$props, $$invalidate) {
 				favorites,
 				model,
 				thresholds,
-				winterImported: true
+				winterImported: true,
+				baselineVersion: 2
 			}));
 		} catch {
 			

@@ -1,3 +1,7 @@
+# WeatherScope 0.5.2
+
+ECMWF is the default for new and existing installations. A one-time preference migration selects ECMWF while preserving locations, units and thresholds. Meteoblue is removed from model selection and comparisons. GFS and ICON remain optional. Daily predictability appears only when supplied by the selected source.
+
 # WeatherScope 0.5.1
 
 Fixes the three-day request limit: request eight days of hourly data to cover the seven-day overview and its interval boundaries. Use dated provider daily minimum, maximum and predictability in the forecast point calendar, avoiding device-timezone gaps and mixing adjacent days.
