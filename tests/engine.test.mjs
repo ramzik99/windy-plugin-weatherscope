@@ -10,6 +10,13 @@ test('RH and exact pressure tendency',()=>{const d=normalize(payload,'mblue');as
 test('comparison refuses misaligned times',()=>{const a=normalize(payload,'mblue'),b=normalize({...payload,data:{...payload.data,ts:[t+HOUR,t+4*HOUR]},header:{model:'gfs'}},'gfs');assert.equal(compare([a,b],'temperature',t).entries.length,1);assert.equal(compare([a,b],'temperature',t).spread,null);});
 test('malformed timestamps rejected',()=>{assert.throws(()=>normalize({...payload,data:{ts:[t,t-1]}},'mblue'));});
 test('actual served model retained',()=>{assert.equal(normalize({...payload,header:{model:'gfs'}},'mblue').model,'gfs');});
+test('known model names are case-normalized without modifying original provider metadata',()=>{
+ const upper=normalize({...payload,header:{model:'ECMWF'}},'ecmwf');
+ const lower=normalize({...payload,header:{model:'ecmwf'}},'ecmwf');
+ assert.equal(upper.model,'ecmwf');assert.equal(upper.header.model,'ECMWF');
+ assert.equal(compare([upper,lower],'temperature',t).entries.length,1);
+ assert.equal(normalize({...payload,header:{model:'OtherModel'}},'ecmwf').model,'OtherModel');
+});
 test('profile and surface values must have identical valid times',()=>{const d=normalize({...payload,meteogram:{ts:[t+HOUR],dewPoint:[283.15]}},'mblue');assert.equal(value(d,'dewPoint',t),null);assert.equal(derived(d,t).some(f=>f.key==='rh'),false);});
 test('duplicate served sources do not inflate comparison count',()=>{const d=normalize(payload,'mblue');assert.equal(compare([d,d],'temperature',t).entries.length,1);assert.equal(compare([d,d],'temperature',t).spread,null);});
 

@@ -1,3 +1,7 @@
+# WeatherScope 0.6.2 — Optional elevation temperature estimate
+
+Adds an opt-in, selected-time temperature estimate using terrain or entered elevation and an editable lapse rate, with original and estimated values side by side. Handles negative elevations, inversions, missing inputs, invalid ranges and Celsius/Fahrenheit display; resets assumptions when point or model changes. Provider forecasts remain intact. Also normalizes known model identifiers to remove false ECMWF-versus-ECMWF notices and duplicate comparison sources.
+
 # WeatherScope 0.6.1 — Location elevation
 
 A compact elevation card shows terrain height and the difference from the selected forecast model. Tap it for model height, data provenance and practical correction guidance. Forecast values remain unchanged. Terrain failures do not block forecasts; requests are cached and guarded against stale location responses. Repaired dependency lock metadata from the installed dependency manifest.

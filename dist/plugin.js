@@ -1,6 +1,6 @@
 const __pluginConfig =  {
   "name": "windy-plugin-weatherscope",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "icon": "◉",
   "title": "WeatherScope",
   "author": "Ramzi Kandah",
@@ -12,8 +12,8 @@ const __pluginConfig =  {
   "addToContextmenu": true,
   "listenToSingleclick": true,
   "private": true,
-  "built": 1790068934177,
-  "builtReadable": "2026-09-22T09:22:14.177Z"
+  "built": 1790070098576,
+  "builtReadable": "2026-09-22T09:41:38.576Z"
 };
 
 // transformCode: import { map } from '@windy/map';
@@ -262,7 +262,9 @@ function set_input_value(input, value) {
 /**
  * @returns {void} */
 function set_style(node, key, value, important) {
-	{
+	if (value == null) {
+		node.style.removeProperty(key);
+	} else {
 		node.style.setProperty(key, value, '');
 	}
 }
@@ -964,6 +966,17 @@ function elevationDifference(terrain,model){
  const a=elevationNumber(terrain),b=elevationNumber(model);
  return a===null||b===null?null:a-b;
 }
+// A sensitivity estimate, not a calibrated forecast. Temperatures are in kelvin.
+function temperatureAtElevation({temperature,siteElevation,modelElevation,lapseRate,enabled=false}){
+ if(!enabled)return {status:'off'};
+ const values=[temperature,siteElevation,modelElevation,lapseRate].map(elevationNumber);
+ if(values.some(v=>v===null))return {status:'missing'};
+ const [original,site,grid,lapse]=values;
+ if(original<=0||site< -500||site>9000||grid< -500||grid>9000||lapse< -20||lapse>20)return {status:'invalid'};
+ const heightDifference=site-grid,change=-lapse*heightDifference/1000,estimate=original+change;
+ if(estimate<=0)return {status:'invalid'};
+ return {status:'ready',original,estimate,change,heightDifference,lapseRate:lapse,siteElevation:site,modelElevation:grid};
+}
 function elevationLoader(fetchElevation){
  const cache=new Map();
  return async point=>{
@@ -997,6 +1010,7 @@ function describe(key){
  if(m){const [,kind,level]=m;const names={temp:['Temperature','K'],dewPoint:['Dew point','K'],rh:['Relative humidity','%'],wind:['Wind','m/s'],windDir:['Wind direction','°'],cloud:['Cloud fraction','%'],gh:['Geopotential height','m']};return {label:`${names[kind][0]} · ${level==='surface'?'surface':level.slice(0,-1)+' hPa'}`,unit:names[kind][1],group:kind==='cloud'?'Clouds':'Vertical profile'};}
  return {label:key,unit:'raw',group:'Other'};
 }
+function canonicalModel(model){const key=typeof model==='string'?model.trim().toLowerCase():model;return Object.hasOwn(MODELS,key)?key:model;}
 function normalize(payload,requestedModel){
  if(!Array.isArray(payload?.data?.ts)||!payload.data.ts.length)throw Error('No supported forecast time series was returned.');
  const fields=[];
@@ -1007,7 +1021,7 @@ function normalize(payload,requestedModel){
   for(const [key,values] of Object.entries(block))if(key!=='ts'&&Array.isArray(values))fields.push({id:`${section}.${key}`,key,section,ts,values,...describe(key)});
  }
  const header=payload.header||{};
- return {fields,ts:payload.data.ts,header,summary:payload.summary||[],raw:payload,requestedModel,model:header.model||requestedModel};
+ return {fields,ts:payload.data.ts,header,summary:payload.summary||[],raw:payload,requestedModel,model:canonicalModel(header.model||requestedModel)};
 }
 function nearestIndex$1(ts,time,tolerance=90*60000){let best=-1,delta=Infinity;ts.forEach((t,i)=>{const d=Math.abs(t-time);if(d<delta){delta=d;best=i;}});return delta<=tolerance?best:-1;}
 function at(field,time){const i=nearestIndex$1(field.ts,time,0);return i<0?null:field.values[i]??null;}
@@ -1217,7 +1231,7 @@ function create_if_block_4$5(ctx) {
 }
 
 // (28:1) {#if field}
-function create_if_block_1$7(ctx) {
+function create_if_block_1$8(ctx) {
 	let div3;
 	let div2;
 	let div0;
@@ -1250,7 +1264,7 @@ function create_if_block_1$7(ctx) {
 	let t11;
 
 	function select_block_type(ctx, dirty) {
-		if (/*geometry*/ ctx[17].path) return create_if_block_2$6;
+		if (/*geometry*/ ctx[17].path) return create_if_block_2$7;
 		return create_else_block_1$3;
 	}
 
@@ -1371,7 +1385,7 @@ function create_else_block_1$3(ctx) {
 }
 
 // (29:1) {#if geometry.path}
-function create_if_block_2$6(ctx) {
+function create_if_block_2$7(ctx) {
 	let svg;
 	let text0;
 	let t0_value = format(/*geometry*/ ctx[17].max, /*field*/ ctx[12].unit, /*prefs*/ ctx[1]) + "";
@@ -1394,8 +1408,8 @@ function create_if_block_2$6(ctx) {
 	}
 
 	function select_block_type_1(ctx, dirty) {
-		if (/*field*/ ctx[12].unit === 'mm/step') return create_if_block_3$5;
-		return create_else_block$6;
+		if (/*field*/ ctx[12].unit === 'mm/step') return create_if_block_3$6;
+		return create_else_block$7;
 	}
 
 	let current_block_type = select_block_type_1(ctx);
@@ -1515,7 +1529,7 @@ function create_each_block_9$1(ctx) {
 }
 
 // (32:316) {:else}
-function create_else_block$6(ctx) {
+function create_else_block$7(ctx) {
 	let path;
 	let path_d_value;
 	let each_1_anchor;
@@ -1589,7 +1603,7 @@ function create_else_block$6(ctx) {
 }
 
 // (32:1) {#if field.unit==='mm/step'}
-function create_if_block_3$5(ctx) {
+function create_if_block_3$6(ctx) {
 	let each_1_anchor;
 	let each_value_7 = ensure_array_like(/*geometry*/ ctx[17].points.filter(func$1));
 	let each_blocks = [];
@@ -2463,7 +2477,7 @@ function create_fragment$b(ctx) {
 	}
 
 	let if_block0 = !/*matches*/ ctx[13].length && create_if_block_4$5();
-	let if_block1 = /*field*/ ctx[12] && create_if_block_1$7(ctx);
+	let if_block1 = /*field*/ ctx[12] && create_if_block_1$8(ctx);
 	let each_value_6 = ensure_array_like(/*times*/ ctx[7]);
 	let each_blocks_2 = [];
 
@@ -2723,7 +2737,7 @@ function create_fragment$b(ctx) {
 				if (if_block1) {
 					if_block1.p(ctx, dirty);
 				} else {
-					if_block1 = create_if_block_1$7(ctx);
+					if_block1 = create_if_block_1$8(ctx);
 					if_block1.c();
 					if_block1.m(section, t11);
 				}
@@ -3035,11 +3049,45 @@ class Explorer extends SvelteComponent {
 /* src\Elevation.svelte generated by Svelte v4.2.20 */
 
 function add_css$9(target) {
-	append_styles(target, "svelte-1w5cdvi", ".elevation.svelte-1w5cdvi.svelte-1w5cdvi{margin:8px 0 14px;border:1px solid #304c59;border-radius:13px;background:#122631;color:#e9f4f7}.elevation.svelte-1w5cdvi summary.svelte-1w5cdvi{display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer;list-style:none}.elevation.svelte-1w5cdvi summary.svelte-1w5cdvi::-webkit-details-marker{display:none}.mountain.svelte-1w5cdvi.svelte-1w5cdvi{font-size:30px;color:#79ddc5}.elevation.svelte-1w5cdvi small.svelte-1w5cdvi{display:block;font-size:10px;letter-spacing:.04em;color:#a8c4cf}.elevation.svelte-1w5cdvi strong.svelte-1w5cdvi{display:block;font-size:16px;margin-top:3px}.difference.svelte-1w5cdvi.svelte-1w5cdvi{margin-left:auto;max-width:45%;text-align:right;font-size:12px;color:#9ce5d6}.content.svelte-1w5cdvi.svelte-1w5cdvi{padding:0 14px 14px;font-size:12px;line-height:1.6}.heights.svelte-1w5cdvi.svelte-1w5cdvi{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 0;border-top:1px solid #304c59}.content.svelte-1w5cdvi h3.svelte-1w5cdvi{font-size:14px;margin:14px 0 6px}.content.svelte-1w5cdvi p.svelte-1w5cdvi{color:#bfd0d8;margin:8px 0}.content.svelte-1w5cdvi p strong.svelte-1w5cdvi{font-size:12px}.content.svelte-1w5cdvi a.svelte-1w5cdvi{color:#8ae6cf}.content.svelte-1w5cdvi button.svelte-1w5cdvi{padding:8px 12px;border:1px solid #507080;border-radius:8px;background:#183540;color:#e9f4f7}.elevation.svelte-1w5cdvi summary.svelte-1w5cdvi:focus-visible,.content.svelte-1w5cdvi button.svelte-1w5cdvi:focus-visible{outline:2px solid #8ae6cf;outline-offset:2px}");
+	append_styles(target, "svelte-15h2p6p", ".guidance.svelte-15h2p6p.svelte-15h2p6p{margin-top:10px}.guidance.svelte-15h2p6p summary.svelte-15h2p6p{padding:8px 0;color:#8ae6cf;font-weight:600}.calculator.svelte-15h2p6p.svelte-15h2p6p{padding:0 0 12px;border-bottom:1px solid #304c59}.enable.svelte-15h2p6p.svelte-15h2p6p{display:flex;gap:10px;align-items:center;padding:10px 0;cursor:pointer}.enable.svelte-15h2p6p input.svelte-15h2p6p{width:18px;height:18px;flex:0 0 18px;accent-color:#8ae6cf}.inputs.svelte-15h2p6p.svelte-15h2p6p{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.inputs.svelte-15h2p6p label.svelte-15h2p6p{font-size:11px;color:#bfd0d8}.inputs.svelte-15h2p6p input.svelte-15h2p6p{display:block;width:100%;box-sizing:border-box;margin-top:5px;padding:10px 8px;border:1px solid #507080;border-radius:8px;background:#0d1b27;color:#e9f4f7;font:inherit;font-size:15px;min-height:42px}.input-note.svelte-15h2p6p.svelte-15h2p6p{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;color:#bfd0d8}.input-note.svelte-15h2p6p button.svelte-15h2p6p{font-size:10px}.input-note.svelte-15h2p6p button.svelte-15h2p6p:disabled{opacity:.4;cursor:default}.estimate-result.svelte-15h2p6p.svelte-15h2p6p{padding:12px;background:#1b373e;border:1px solid #4c8e84;border-radius:10px}.comparison.svelte-15h2p6p.svelte-15h2p6p{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0}.comparison.svelte-15h2p6p strong.svelte-15h2p6p{font-size:25px}.comparison.svelte-15h2p6p>span.svelte-15h2p6p{font-size:24px;color:#8ae6cf}.estimate-result.svelte-15h2p6p p.svelte-15h2p6p{font-size:11px}.inputs.svelte-15h2p6p input.svelte-15h2p6p:focus-visible,.enable.svelte-15h2p6p input.svelte-15h2p6p:focus-visible{outline:2px solid #8ae6cf;outline-offset:2px}.elevation.svelte-15h2p6p.svelte-15h2p6p{margin:8px 0 14px;border:1px solid #304c59;border-radius:13px;background:#122631;color:#e9f4f7}.elevation.svelte-15h2p6p summary.svelte-15h2p6p{display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer;list-style:none}.elevation.svelte-15h2p6p summary.svelte-15h2p6p::-webkit-details-marker{display:none}.mountain.svelte-15h2p6p.svelte-15h2p6p{font-size:30px;color:#79ddc5}.elevation.svelte-15h2p6p small.svelte-15h2p6p{display:block;font-size:10px;letter-spacing:.04em;color:#a8c4cf}.elevation.svelte-15h2p6p strong.svelte-15h2p6p{display:block;font-size:16px;margin-top:3px}.difference.svelte-15h2p6p.svelte-15h2p6p{margin-left:auto;max-width:45%;text-align:right;font-size:12px;color:#9ce5d6}.content.svelte-15h2p6p.svelte-15h2p6p{padding:0 14px 14px;font-size:12px;line-height:1.6}.heights.svelte-15h2p6p.svelte-15h2p6p{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 0;border-top:1px solid #304c59}.content.svelte-15h2p6p h3.svelte-15h2p6p{font-size:14px;margin:14px 0 6px}.content.svelte-15h2p6p p.svelte-15h2p6p{color:#bfd0d8;margin:8px 0}.content.svelte-15h2p6p p strong.svelte-15h2p6p{font-size:12px}.content.svelte-15h2p6p a.svelte-15h2p6p{color:#8ae6cf}.content.svelte-15h2p6p button.svelte-15h2p6p{padding:8px 12px;border:1px solid #507080;border-radius:8px;background:#183540;color:#e9f4f7}.elevation.svelte-15h2p6p summary.svelte-15h2p6p:focus-visible,.content.svelte-15h2p6p button.svelte-15h2p6p:focus-visible{outline:2px solid #8ae6cf;outline-offset:2px}");
 }
 
-// (23:2) {#if !busy&&terrain===null}
-function create_if_block$8(ctx) {
+// (29:389) {#if estimate.status==='ready'}
+function create_if_block_3$5(ctx) {
+	let small;
+	let t0;
+	let t1_value = format(/*estimate*/ ctx[9].estimate, 'K', /*prefs*/ ctx[4]) + "";
+	let t1;
+	let t2;
+
+	return {
+		c() {
+			small = element("small");
+			t0 = text("What-if ");
+			t1 = text(t1_value);
+			t2 = text(" · selected time");
+			set_style(small, "color", "#8ae6cf");
+			attr(small, "class", "svelte-15h2p6p");
+		},
+		m(target, anchor) {
+			insert(target, small, anchor);
+			append(small, t0);
+			append(small, t1);
+			append(small, t2);
+		},
+		p(ctx, dirty) {
+			if (dirty & /*estimate, prefs*/ 528 && t1_value !== (t1_value = format(/*estimate*/ ctx[9].estimate, 'K', /*prefs*/ ctx[4]) + "")) set_data(t1, t1_value);
+		},
+		d(detaching) {
+			if (detaching) {
+				detach(small);
+			}
+		}
+	};
+}
+
+// (33:2) {#if !busy&&terrain===null}
+function create_if_block_2$6(ctx) {
 	let button;
 	let mounted;
 	let dispose;
@@ -3048,13 +3096,13 @@ function create_if_block$8(ctx) {
 		c() {
 			button = element("button");
 			button.textContent = "Retry elevation";
-			attr(button, "class", "svelte-1w5cdvi");
+			attr(button, "class", "svelte-15h2p6p");
 		},
 		m(target, anchor) {
 			insert(target, button, anchor);
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*click_handler*/ ctx[10]);
+				dispose = listen(button, "click", /*click_handler*/ ctx[21]);
 				mounted = true;
 			}
 		},
@@ -3070,40 +3118,378 @@ function create_if_block$8(ctx) {
 	};
 }
 
+// (38:3) {#if enabled}
+function create_if_block$8(ctx) {
+	let div0;
+	let label0;
+	let t0;
+	let input0;
+	let input0_placeholder_value;
+	let label1;
+	let t1;
+	let input1;
+	let t2;
+	let div1;
+	let span;
+
+	let t3_value = (/*siteOverride*/ ctx[7] == null
+	? 'Using terrain height'
+	: 'Using your entered elevation') + "";
+
+	let t3;
+	let button;
+	let t4;
+	let button_disabled_value;
+	let t5;
+	let p;
+	let t7;
+	let if_block_anchor;
+	let mounted;
+	let dispose;
+
+	function select_block_type(ctx, dirty) {
+		if (/*estimate*/ ctx[9].status === 'ready') return create_if_block_1$7;
+		return create_else_block$6;
+	}
+
+	let current_block_type = select_block_type(ctx);
+	let if_block = current_block_type(ctx);
+
+	return {
+		c() {
+			div0 = element("div");
+			label0 = element("label");
+			t0 = text("Site elevation · m AMSL");
+			input0 = element("input");
+			label1 = element("label");
+			t1 = text("Lapse rate · °C/km");
+			input1 = element("input");
+			t2 = space();
+			div1 = element("div");
+			span = element("span");
+			t3 = text(t3_value);
+			button = element("button");
+			t4 = text("Use terrain height");
+			t5 = space();
+			p = element("p");
+			p.textContent = "6.5 °C/km is an illustrative standard-atmosphere starting value, not a measured local lapse rate. Positive means cooling with height; negative means an inversion.";
+			t7 = space();
+			if_block.c();
+			if_block_anchor = empty();
+			attr(input0, "aria-label", "Site elevation in metres");
+			attr(input0, "type", "number");
+			attr(input0, "min", "-500");
+			attr(input0, "max", "9000");
+			attr(input0, "step", "1");
+
+			attr(input0, "placeholder", input0_placeholder_value = /*terrain*/ ctx[5] === null
+			? 'Enter elevation'
+			: String(Math.round(/*terrain*/ ctx[5])));
+
+			attr(input0, "class", "svelte-15h2p6p");
+			attr(label0, "class", "svelte-15h2p6p");
+			attr(input1, "aria-label", "Temperature lapse rate in Celsius per kilometre");
+			attr(input1, "type", "number");
+			attr(input1, "min", "-20");
+			attr(input1, "max", "20");
+			attr(input1, "step", "0.1");
+			attr(input1, "class", "svelte-15h2p6p");
+			attr(label1, "class", "svelte-15h2p6p");
+			attr(div0, "class", "inputs svelte-15h2p6p");
+			button.disabled = button_disabled_value = /*siteOverride*/ ctx[7] == null;
+			attr(button, "class", "svelte-15h2p6p");
+			attr(div1, "class", "input-note svelte-15h2p6p");
+			attr(p, "class", "svelte-15h2p6p");
+		},
+		m(target, anchor) {
+			insert(target, div0, anchor);
+			append(div0, label0);
+			append(label0, t0);
+			append(label0, input0);
+			set_input_value(input0, /*siteOverride*/ ctx[7]);
+			append(div0, label1);
+			append(label1, t1);
+			append(label1, input1);
+			set_input_value(input1, /*lapseRate*/ ctx[8]);
+			insert(target, t2, anchor);
+			insert(target, div1, anchor);
+			append(div1, span);
+			append(span, t3);
+			append(div1, button);
+			append(button, t4);
+			insert(target, t5, anchor);
+			insert(target, p, anchor);
+			insert(target, t7, anchor);
+			if_block.m(target, anchor);
+			insert(target, if_block_anchor, anchor);
+
+			if (!mounted) {
+				dispose = [
+					listen(input0, "input", /*input0_input_handler*/ ctx[23]),
+					listen(input1, "input", /*input1_input_handler*/ ctx[24]),
+					listen(button, "click", /*click_handler_1*/ ctx[25])
+				];
+
+				mounted = true;
+			}
+		},
+		p(ctx, dirty) {
+			if (dirty & /*terrain*/ 32 && input0_placeholder_value !== (input0_placeholder_value = /*terrain*/ ctx[5] === null
+			? 'Enter elevation'
+			: String(Math.round(/*terrain*/ ctx[5])))) {
+				attr(input0, "placeholder", input0_placeholder_value);
+			}
+
+			if (dirty & /*siteOverride*/ 128 && to_number(input0.value) !== /*siteOverride*/ ctx[7]) {
+				set_input_value(input0, /*siteOverride*/ ctx[7]);
+			}
+
+			if (dirty & /*lapseRate*/ 256 && to_number(input1.value) !== /*lapseRate*/ ctx[8]) {
+				set_input_value(input1, /*lapseRate*/ ctx[8]);
+			}
+
+			if (dirty & /*siteOverride*/ 128 && t3_value !== (t3_value = (/*siteOverride*/ ctx[7] == null
+			? 'Using terrain height'
+			: 'Using your entered elevation') + "")) set_data(t3, t3_value);
+
+			if (dirty & /*siteOverride*/ 128 && button_disabled_value !== (button_disabled_value = /*siteOverride*/ ctx[7] == null)) {
+				button.disabled = button_disabled_value;
+			}
+
+			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+				if_block.p(ctx, dirty);
+			} else {
+				if_block.d(1);
+				if_block = current_block_type(ctx);
+
+				if (if_block) {
+					if_block.c();
+					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+				}
+			}
+		},
+		d(detaching) {
+			if (detaching) {
+				detach(div0);
+				detach(t2);
+				detach(div1);
+				detach(t5);
+				detach(p);
+				detach(t7);
+				detach(if_block_anchor);
+			}
+
+			if_block.d(detaching);
+			mounted = false;
+			run_all(dispose);
+		}
+	};
+}
+
+// (45:4) {:else}
+function create_else_block$6(ctx) {
+	let p;
+
+	let t_value = (/*estimate*/ ctx[9].status === 'invalid'
+	? 'Use an elevation between −500 and 9000 m and a lapse rate between −20 and 20 °C/km.'
+	: 'Enter a site elevation and lapse rate. Model elevation and temperature at the selected time must also be available.') + "";
+
+	let t;
+
+	return {
+		c() {
+			p = element("p");
+			t = text(t_value);
+			attr(p, "role", "status");
+			attr(p, "class", "svelte-15h2p6p");
+		},
+		m(target, anchor) {
+			insert(target, p, anchor);
+			append(p, t);
+		},
+		p(ctx, dirty) {
+			if (dirty & /*estimate*/ 512 && t_value !== (t_value = (/*estimate*/ ctx[9].status === 'invalid'
+			? 'Use an elevation between −500 and 9000 m and a lapse rate between −20 and 20 °C/km.'
+			: 'Enter a site elevation and lapse rate. Model elevation and temperature at the selected time must also be available.') + "")) set_data(t, t_value);
+		},
+		d(detaching) {
+			if (detaching) {
+				detach(p);
+			}
+		}
+	};
+}
+
+// (42:4) {#if estimate.status==='ready'}
+function create_if_block_1$7(ctx) {
+	let div3;
+	let small0;
+	let t0;
+	let t1;
+	let t2_value = timeLabel(/*valid*/ ctx[3], /*prefs*/ ctx[4].local) + "";
+	let t2;
+	let t3;
+	let t4_value = (/*prefs*/ ctx[4].local ? 'device local' : 'UTC') + "";
+	let t4;
+	let div2;
+	let div0;
+	let small1;
+	let strong0;
+	let t6_value = format(/*estimate*/ ctx[9].original, 'K', /*prefs*/ ctx[4]) + "";
+	let t6;
+	let span;
+	let div1;
+	let small2;
+	let strong1;
+	let t9_value = format(/*estimate*/ ctx[9].estimate, 'K', /*prefs*/ ctx[4]) + "";
+	let t9;
+	let p0;
+	let t10_value = /*changeLabel*/ ctx[15](/*change*/ ctx[12], /*prefs*/ ctx[4].temp) + "";
+	let t10;
+	let t11;
+	let t12_value = Math.abs(Math.round(/*estimate*/ ctx[9].heightDifference)) + "";
+	let t12;
+	let t13;
+
+	let t14_value = (/*estimate*/ ctx[9].heightDifference >= 0
+	? 'above'
+	: 'below') + "";
+
+	let t14;
+	let t15;
+	let t16;
+	let p1;
+
+	return {
+		c() {
+			div3 = element("div");
+			small0 = element("small");
+			t0 = text(/*model*/ ctx[2]);
+			t1 = text(" · ");
+			t2 = text(t2_value);
+			t3 = text(" · ");
+			t4 = text(t4_value);
+			div2 = element("div");
+			div0 = element("div");
+			small1 = element("small");
+			small1.textContent = "Provider forecast";
+			strong0 = element("strong");
+			t6 = text(t6_value);
+			span = element("span");
+			span.textContent = "→";
+			div1 = element("div");
+			small2 = element("small");
+			small2.textContent = "Elevation estimate";
+			strong1 = element("strong");
+			t9 = text(t9_value);
+			p0 = element("p");
+			t10 = text(t10_value);
+			t11 = text(" adjustment · site ");
+			t12 = text(t12_value);
+			t13 = text(" m ");
+			t14 = text(t14_value);
+			t15 = text(" model");
+			t16 = space();
+			p1 = element("p");
+			p1.textContent = "This is a sensitivity estimate, not a validated local forecast. The seven-day forecast, other parameters and exports retain provider values. Move the forecast slider to inspect another time.";
+			attr(small0, "class", "svelte-15h2p6p");
+			attr(small1, "class", "svelte-15h2p6p");
+			attr(strong0, "class", "svelte-15h2p6p");
+			attr(span, "aria-hidden", "true");
+			attr(span, "class", "svelte-15h2p6p");
+			attr(small2, "class", "svelte-15h2p6p");
+			attr(strong1, "class", "svelte-15h2p6p");
+			attr(div2, "class", "comparison svelte-15h2p6p");
+			attr(p0, "class", "svelte-15h2p6p");
+			attr(div3, "class", "estimate-result svelte-15h2p6p");
+			attr(div3, "aria-live", "polite");
+			attr(p1, "class", "svelte-15h2p6p");
+		},
+		m(target, anchor) {
+			insert(target, div3, anchor);
+			append(div3, small0);
+			append(small0, t0);
+			append(small0, t1);
+			append(small0, t2);
+			append(small0, t3);
+			append(small0, t4);
+			append(div3, div2);
+			append(div2, div0);
+			append(div0, small1);
+			append(div0, strong0);
+			append(strong0, t6);
+			append(div2, span);
+			append(div2, div1);
+			append(div1, small2);
+			append(div1, strong1);
+			append(strong1, t9);
+			append(div3, p0);
+			append(p0, t10);
+			append(p0, t11);
+			append(p0, t12);
+			append(p0, t13);
+			append(p0, t14);
+			append(p0, t15);
+			insert(target, t16, anchor);
+			insert(target, p1, anchor);
+		},
+		p(ctx, dirty) {
+			if (dirty & /*model*/ 4) set_data(t0, /*model*/ ctx[2]);
+			if (dirty & /*valid, prefs*/ 24 && t2_value !== (t2_value = timeLabel(/*valid*/ ctx[3], /*prefs*/ ctx[4].local) + "")) set_data(t2, t2_value);
+			if (dirty & /*prefs*/ 16 && t4_value !== (t4_value = (/*prefs*/ ctx[4].local ? 'device local' : 'UTC') + "")) set_data(t4, t4_value);
+			if (dirty & /*estimate, prefs*/ 528 && t6_value !== (t6_value = format(/*estimate*/ ctx[9].original, 'K', /*prefs*/ ctx[4]) + "")) set_data(t6, t6_value);
+			if (dirty & /*estimate, prefs*/ 528 && t9_value !== (t9_value = format(/*estimate*/ ctx[9].estimate, 'K', /*prefs*/ ctx[4]) + "")) set_data(t9, t9_value);
+			if (dirty & /*change, prefs*/ 4112 && t10_value !== (t10_value = /*changeLabel*/ ctx[15](/*change*/ ctx[12], /*prefs*/ ctx[4].temp) + "")) set_data(t10, t10_value);
+			if (dirty & /*estimate*/ 512 && t12_value !== (t12_value = Math.abs(Math.round(/*estimate*/ ctx[9].heightDifference)) + "")) set_data(t12, t12_value);
+
+			if (dirty & /*estimate*/ 512 && t14_value !== (t14_value = (/*estimate*/ ctx[9].heightDifference >= 0
+			? 'above'
+			: 'below') + "")) set_data(t14, t14_value);
+		},
+		d(detaching) {
+			if (detaching) {
+				detach(div3);
+				detach(t16);
+				detach(p1);
+			}
+		}
+	};
+}
+
 function create_fragment$a(ctx) {
-	let details;
-	let summary;
+	let details1;
+	let summary0;
 	let span0;
 	let span1;
 	let small0;
 	let strong0;
 
-	let t2_value = (/*busy*/ ctx[5]
+	let t2_value = (/*busy*/ ctx[11]
 	? 'Loading…'
-	: /*metres*/ ctx[8](/*terrain*/ ctx[3])) + "";
+	: /*metres*/ ctx[16](/*terrain*/ ctx[5])) + "";
 
 	let t2;
 	let span3;
 
-	let t3_value = (/*difference*/ ctx[6] === null
+	let t3_value = (/*difference*/ ctx[13] === null
 	? 'Elevation details'
-	: Math.round(/*difference*/ ctx[6]) === 0
+	: Math.round(/*difference*/ ctx[13]) === 0
 		? 'Same rounded height'
-		: `${Math.abs(Math.round(/*difference*/ ctx[6]))} m ${/*difference*/ ctx[6] > 0 ? 'above' : 'below'} model`) + "";
+		: `${Math.abs(Math.round(/*difference*/ ctx[13]))} m ${/*difference*/ ctx[13] > 0 ? 'above' : 'below'} model`) + "";
 
 	let t3;
 	let t4;
 	let span2;
 	let t6;
-	let div3;
+	let div4;
 	let div2;
 	let div0;
 	let small1;
 	let strong1;
 
-	let t8_value = (/*busy*/ ctx[5]
+	let t8_value = (/*busy*/ ctx[11]
 	? 'Loading…'
-	: /*metres*/ ctx[8](/*terrain*/ ctx[3])) + "";
+	: /*metres*/ ctx[16](/*terrain*/ ctx[5])) + "";
 
 	let t8;
 	let div1;
@@ -3111,27 +3497,33 @@ function create_fragment$a(ctx) {
 	let t9;
 	let t10;
 	let strong2;
-	let t11_value = /*metres*/ ctx[8](/*grid*/ ctx[4]) + "";
+	let t11_value = /*metres*/ ctx[16](/*grid*/ ctx[10]) + "";
 	let t11;
 	let t12;
 	let p0;
 	let t14;
 	let t15;
+	let div3;
 	let h3;
 	let t17;
 	let p1;
 	let t19;
-	let p2;
-	let t23;
-	let p3;
-	let t25;
-	let a;
-	let if_block = !/*busy*/ ctx[5] && /*terrain*/ ctx[3] === null && create_if_block$8(ctx);
+	let label;
+	let input;
+	let t20;
+	let t21;
+	let t22;
+	let details0;
+	let mounted;
+	let dispose;
+	let if_block0 = /*estimate*/ ctx[9].status === 'ready' && create_if_block_3$5(ctx);
+	let if_block1 = !/*busy*/ ctx[11] && /*terrain*/ ctx[5] === null && create_if_block_2$6(ctx);
+	let if_block2 = /*enabled*/ ctx[6] && create_if_block$8(ctx);
 
 	return {
 		c() {
-			details = element("details");
-			summary = element("summary");
+			details1 = element("details");
+			summary0 = element("summary");
 			span0 = element("span");
 			span0.textContent = "△";
 			span1 = element("span");
@@ -3141,11 +3533,12 @@ function create_fragment$a(ctx) {
 			t2 = text(t2_value);
 			span3 = element("span");
 			t3 = text(t3_value);
+			if (if_block0) if_block0.c();
 			t4 = space();
 			span2 = element("span");
 			span2.textContent = "⌄";
 			t6 = space();
-			div3 = element("div");
+			div4 = element("div");
 			div2 = element("div");
 			div0 = element("div");
 			small1 = element("small");
@@ -3162,62 +3555,63 @@ function create_fragment$a(ctx) {
 			p0 = element("p");
 			p0.textContent = "Metres above mean sea level. Location height comes from Windy’s terrain service; model height comes from the forecast header. Terrain is an estimate, not a surveyed elevation.";
 			t14 = space();
-			if (if_block) if_block.c();
+			if (if_block1) if_block1.c();
 			t15 = space();
+			div3 = element("div");
 			h3 = element("h3");
-			h3.textContent = "Should I adjust the forecast?";
+			h3.textContent = "Temperature at your elevation";
 			t17 = space();
 			p1 = element("p");
-			p1.textContent = "A height difference can affect local temperature. First establish whether the supplied temperature is already height-adjusted; applying another correction could count the difference twice. WeatherScope leaves provider values unchanged.";
+			p1.textContent = "A what-if estimate for the selected forecast time. Upstream height adjustment is unverified.";
 			t19 = space();
-			p2 = element("p");
-			p2.innerHTML = `For unadjusted temperature in well-mixed air: <strong class="svelte-1w5cdvi">site temperature ≈ model temperature − lapse rate × height difference in km</strong>. Use a lapse rate supported by the local profile or observations. Inversions and valley cold pools can reverse the usual cooling with height.`;
-			t23 = space();
-			p3 = element("p");
-			p3.textContent = "Wind, precipitation, cloud and humidity need their own local assessment. For repeat use, compare forecasts with a representative station across different hours, seasons and weather patterns before applying a local bias adjustment.";
-			t25 = space();
-			a = element("a");
-			a.textContent = "ECMWF temperature guidance ↗";
-			attr(span0, "class", "mountain svelte-1w5cdvi");
+			label = element("label");
+			input = element("input");
+			t20 = text(" Estimate assuming provider temperature is unadjusted");
+			t21 = space();
+			if (if_block2) if_block2.c();
+			t22 = space();
+			details0 = element("details");
+			details0.innerHTML = `<summary class="svelte-15h2p6p">When is a correction useful?</summary> <p class="svelte-15h2p6p">A height difference can affect local temperature. First establish whether the supplied temperature is already height-adjusted; applying another correction could count the difference twice. WeatherScope leaves provider values unchanged.</p> <p class="svelte-15h2p6p">For unadjusted temperature in well-mixed air: <strong class="svelte-15h2p6p">site temperature ≈ model temperature − lapse rate × height difference in km</strong>. Use a lapse rate supported by the local profile or observations. Inversions and valley cold pools can reverse the usual cooling with height.</p> <p class="svelte-15h2p6p">Wind, precipitation, cloud and humidity need their own local assessment. For repeat use, compare forecasts with a representative station across different hours, seasons and weather patterns before applying a local bias adjustment.</p> <a href="https://confluence.ecmwf.int/spaces/FUG/pages/673551627/Section+9.2.1+Causes+of+errors+in+forecast+temperature+and+humidity" target="_blank" rel="noopener noreferrer" class="svelte-15h2p6p">ECMWF temperature guidance ↗</a>`;
+			attr(span0, "class", "mountain svelte-15h2p6p");
 			attr(span0, "aria-hidden", "true");
-			attr(small0, "class", "svelte-1w5cdvi");
-			attr(strong0, "class", "svelte-1w5cdvi");
+			attr(small0, "class", "svelte-15h2p6p");
+			attr(strong0, "class", "svelte-15h2p6p");
 			attr(span2, "aria-hidden", "true");
-			attr(span3, "class", "difference svelte-1w5cdvi");
-			attr(summary, "aria-label", "Location and model elevation");
-			attr(summary, "class", "svelte-1w5cdvi");
-			attr(small1, "class", "svelte-1w5cdvi");
-			attr(strong1, "class", "svelte-1w5cdvi");
-			attr(small2, "class", "svelte-1w5cdvi");
-			attr(strong2, "class", "svelte-1w5cdvi");
-			attr(div2, "class", "heights svelte-1w5cdvi");
-			attr(p0, "class", "svelte-1w5cdvi");
-			attr(h3, "class", "svelte-1w5cdvi");
-			attr(p1, "class", "svelte-1w5cdvi");
-			attr(p2, "class", "svelte-1w5cdvi");
-			attr(p3, "class", "svelte-1w5cdvi");
-			attr(a, "href", "https://confluence.ecmwf.int/spaces/FUG/pages/673551627/Section+9.2.1+Causes+of+errors+in+forecast+temperature+and+humidity");
-			attr(a, "target", "_blank");
-			attr(a, "rel", "noopener noreferrer");
-			attr(a, "class", "svelte-1w5cdvi");
-			attr(div3, "class", "content svelte-1w5cdvi");
-			attr(details, "class", "elevation svelte-1w5cdvi");
+			attr(span3, "class", "difference svelte-15h2p6p");
+			attr(summary0, "aria-label", "Location and model elevation");
+			attr(summary0, "class", "svelte-15h2p6p");
+			attr(small1, "class", "svelte-15h2p6p");
+			attr(strong1, "class", "svelte-15h2p6p");
+			attr(small2, "class", "svelte-15h2p6p");
+			attr(strong2, "class", "svelte-15h2p6p");
+			attr(div2, "class", "heights svelte-15h2p6p");
+			attr(p0, "class", "svelte-15h2p6p");
+			attr(h3, "class", "svelte-15h2p6p");
+			attr(p1, "class", "svelte-15h2p6p");
+			attr(input, "type", "checkbox");
+			attr(input, "class", "svelte-15h2p6p");
+			attr(label, "class", "enable svelte-15h2p6p");
+			attr(div3, "class", "calculator svelte-15h2p6p");
+			attr(details0, "class", "guidance svelte-15h2p6p");
+			attr(div4, "class", "content svelte-15h2p6p");
+			attr(details1, "class", "elevation svelte-15h2p6p");
 		},
 		m(target, anchor) {
-			insert(target, details, anchor);
-			append(details, summary);
-			append(summary, span0);
-			append(summary, span1);
+			insert(target, details1, anchor);
+			append(details1, summary0);
+			append(summary0, span0);
+			append(summary0, span1);
 			append(span1, small0);
 			append(span1, strong0);
 			append(strong0, t2);
-			append(summary, span3);
+			append(summary0, span3);
 			append(span3, t3);
+			if (if_block0) if_block0.m(span3, null);
 			append(span3, t4);
 			append(span3, span2);
-			append(details, t6);
-			append(details, div3);
-			append(div3, div2);
+			append(details1, t6);
+			append(details1, div4);
+			append(div4, div2);
 			append(div2, div0);
 			append(div0, small1);
 			append(div0, strong1);
@@ -3228,60 +3622,103 @@ function create_fragment$a(ctx) {
 			append(small2, t10);
 			append(div1, strong2);
 			append(strong2, t11);
-			append(div3, t12);
-			append(div3, p0);
-			append(div3, t14);
-			if (if_block) if_block.m(div3, null);
-			append(div3, t15);
+			append(div4, t12);
+			append(div4, p0);
+			append(div4, t14);
+			if (if_block1) if_block1.m(div4, null);
+			append(div4, t15);
+			append(div4, div3);
 			append(div3, h3);
 			append(div3, t17);
 			append(div3, p1);
 			append(div3, t19);
-			append(div3, p2);
-			append(div3, t23);
-			append(div3, p3);
-			append(div3, t25);
-			append(div3, a);
+			append(div3, label);
+			append(label, input);
+			input.checked = /*enabled*/ ctx[6];
+			append(label, t20);
+			append(div3, t21);
+			if (if_block2) if_block2.m(div3, null);
+			append(div4, t22);
+			append(div4, details0);
+
+			if (!mounted) {
+				dispose = listen(input, "change", /*input_change_handler*/ ctx[22]);
+				mounted = true;
+			}
 		},
 		p(ctx, [dirty]) {
-			if (dirty & /*busy, terrain*/ 40 && t2_value !== (t2_value = (/*busy*/ ctx[5]
+			if (dirty & /*busy, terrain*/ 2080 && t2_value !== (t2_value = (/*busy*/ ctx[11]
 			? 'Loading…'
-			: /*metres*/ ctx[8](/*terrain*/ ctx[3])) + "")) set_data(t2, t2_value);
+			: /*metres*/ ctx[16](/*terrain*/ ctx[5])) + "")) set_data(t2, t2_value);
 
-			if (dirty & /*difference*/ 64 && t3_value !== (t3_value = (/*difference*/ ctx[6] === null
+			if (dirty & /*difference*/ 8192 && t3_value !== (t3_value = (/*difference*/ ctx[13] === null
 			? 'Elevation details'
-			: Math.round(/*difference*/ ctx[6]) === 0
+			: Math.round(/*difference*/ ctx[13]) === 0
 				? 'Same rounded height'
-				: `${Math.abs(Math.round(/*difference*/ ctx[6]))} m ${/*difference*/ ctx[6] > 0 ? 'above' : 'below'} model`) + "")) set_data(t3, t3_value);
+				: `${Math.abs(Math.round(/*difference*/ ctx[13]))} m ${/*difference*/ ctx[13] > 0 ? 'above' : 'below'} model`) + "")) set_data(t3, t3_value);
 
-			if (dirty & /*busy, terrain*/ 40 && t8_value !== (t8_value = (/*busy*/ ctx[5]
+			if (/*estimate*/ ctx[9].status === 'ready') {
+				if (if_block0) {
+					if_block0.p(ctx, dirty);
+				} else {
+					if_block0 = create_if_block_3$5(ctx);
+					if_block0.c();
+					if_block0.m(span3, t4);
+				}
+			} else if (if_block0) {
+				if_block0.d(1);
+				if_block0 = null;
+			}
+
+			if (dirty & /*busy, terrain*/ 2080 && t8_value !== (t8_value = (/*busy*/ ctx[11]
 			? 'Loading…'
-			: /*metres*/ ctx[8](/*terrain*/ ctx[3])) + "")) set_data(t8, t8_value);
+			: /*metres*/ ctx[16](/*terrain*/ ctx[5])) + "")) set_data(t8, t8_value);
 
 			if (dirty & /*model*/ 4) set_data(t9, /*model*/ ctx[2]);
-			if (dirty & /*grid*/ 16 && t11_value !== (t11_value = /*metres*/ ctx[8](/*grid*/ ctx[4]) + "")) set_data(t11, t11_value);
+			if (dirty & /*grid*/ 1024 && t11_value !== (t11_value = /*metres*/ ctx[16](/*grid*/ ctx[10]) + "")) set_data(t11, t11_value);
 
-			if (!/*busy*/ ctx[5] && /*terrain*/ ctx[3] === null) {
-				if (if_block) {
-					if_block.p(ctx, dirty);
+			if (!/*busy*/ ctx[11] && /*terrain*/ ctx[5] === null) {
+				if (if_block1) {
+					if_block1.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$8(ctx);
-					if_block.c();
-					if_block.m(div3, t15);
+					if_block1 = create_if_block_2$6(ctx);
+					if_block1.c();
+					if_block1.m(div4, t15);
 				}
-			} else if (if_block) {
-				if_block.d(1);
-				if_block = null;
+			} else if (if_block1) {
+				if_block1.d(1);
+				if_block1 = null;
+			}
+
+			if (dirty & /*enabled*/ 64) {
+				input.checked = /*enabled*/ ctx[6];
+			}
+
+			if (/*enabled*/ ctx[6]) {
+				if (if_block2) {
+					if_block2.p(ctx, dirty);
+				} else {
+					if_block2 = create_if_block$8(ctx);
+					if_block2.c();
+					if_block2.m(div3, null);
+				}
+			} else if (if_block2) {
+				if_block2.d(1);
+				if_block2 = null;
 			}
 		},
 		i: noop,
 		o: noop,
 		d(detaching) {
 			if (detaching) {
-				detach(details);
+				detach(details1);
 			}
 
-			if (if_block) if_block.d();
+			if (if_block0) if_block0.d();
+			if (if_block1) if_block1.d();
+			if (if_block2) if_block2.d();
+			mounted = false;
+			dispose();
 		}
 	};
 }
@@ -3289,46 +3726,119 @@ function create_fragment$a(ctx) {
 function instance$a($$self, $$props, $$invalidate) {
 	let grid;
 	let difference;
-	let { location = null, load = null, modelElevation = null, model = 'ECMWF' } = $$props;
-	let terrain = null, busy = false, request = 0;
+	let site;
+	let estimate;
+	let change;
+	let { location = null, load = null, modelElevation = null, model = 'ECMWF', sourceKey = '', temperature = null, valid = null, prefs = {} } = $$props;
+
+	let terrain = null,
+		busy = false,
+		request = 0,
+		enabled = false,
+		siteOverride = undefined,
+		lapseRate = 6.5,
+		context = '';
+
+	function resetContext(point, source) {
+		const key = `${point?.lat},${point?.lon}:${source}`;
+
+		if (context !== key) {
+			context = key;
+			$$invalidate(6, enabled = false);
+			$$invalidate(7, siteOverride = undefined);
+			$$invalidate(8, lapseRate = 6.5);
+		}
+	}
 
 	async function refresh(point, loader) {
 		const id = ++request;
-		$$invalidate(3, terrain = null);
-		$$invalidate(5, busy = true);
+		$$invalidate(5, terrain = null);
+		$$invalidate(11, busy = true);
 
 		try {
 			const value = loader ? await loader(point) : null;
-			if (id === request) $$invalidate(3, terrain = elevationNumber(value));
+			if (id === request) $$invalidate(5, terrain = elevationNumber(value));
 		} catch {
-			if (id === request) $$invalidate(3, terrain = null);
+			if (id === request) $$invalidate(5, terrain = null);
 		} finally {
-			if (id === request) $$invalidate(5, busy = false);
+			if (id === request) $$invalidate(11, busy = false);
 		}
 	}
 
 	onDestroy(() => request++);
+
+	const changeLabel = (n, unit) => `${n === 0 ? '' : n > 0 ? '+' : '−'}${Math.abs(n) > 0 && Math.abs(n) < 1
+	? '<1'
+	: Math.round(Math.abs(n))} °${unit === 'F' ? 'F' : 'C'}`;
+
 	const metres = n => n === null ? 'Unavailable' : `${Math.round(n)} m`;
 	const click_handler = () => refresh(location, load);
+
+	function input_change_handler() {
+		enabled = this.checked;
+		$$invalidate(6, enabled);
+	}
+
+	function input0_input_handler() {
+		siteOverride = to_number(this.value);
+		$$invalidate(7, siteOverride);
+	}
+
+	function input1_input_handler() {
+		lapseRate = to_number(this.value);
+		$$invalidate(8, lapseRate);
+	}
+
+	const click_handler_1 = () => $$invalidate(7, siteOverride = undefined);
 
 	$$self.$$set = $$props => {
 		if ('location' in $$props) $$invalidate(0, location = $$props.location);
 		if ('load' in $$props) $$invalidate(1, load = $$props.load);
-		if ('modelElevation' in $$props) $$invalidate(9, modelElevation = $$props.modelElevation);
+		if ('modelElevation' in $$props) $$invalidate(17, modelElevation = $$props.modelElevation);
 		if ('model' in $$props) $$invalidate(2, model = $$props.model);
+		if ('sourceKey' in $$props) $$invalidate(18, sourceKey = $$props.sourceKey);
+		if ('temperature' in $$props) $$invalidate(19, temperature = $$props.temperature);
+		if ('valid' in $$props) $$invalidate(3, valid = $$props.valid);
+		if ('prefs' in $$props) $$invalidate(4, prefs = $$props.prefs);
 	};
 
 	$$self.$$.update = () => {
+		if ($$self.$$.dirty & /*location, sourceKey*/ 262145) {
+			resetContext(location, sourceKey);
+		}
+
 		if ($$self.$$.dirty & /*location, load*/ 3) {
 			if (location) refresh(location, load);
 		}
 
-		if ($$self.$$.dirty & /*modelElevation*/ 512) {
-			$$invalidate(4, grid = elevationNumber(modelElevation));
+		if ($$self.$$.dirty & /*modelElevation*/ 131072) {
+			$$invalidate(10, grid = elevationNumber(modelElevation));
 		}
 
-		if ($$self.$$.dirty & /*terrain, grid*/ 24) {
-			$$invalidate(6, difference = elevationDifference(terrain, grid));
+		if ($$self.$$.dirty & /*terrain, grid*/ 1056) {
+			$$invalidate(13, difference = elevationDifference(terrain, grid));
+		}
+
+		if ($$self.$$.dirty & /*siteOverride, terrain*/ 160) {
+			$$invalidate(20, site = siteOverride == null || siteOverride === ''
+			? terrain
+			: elevationNumber(siteOverride));
+		}
+
+		if ($$self.$$.dirty & /*temperature, site, grid, lapseRate, enabled*/ 1574208) {
+			$$invalidate(9, estimate = temperatureAtElevation({
+				temperature,
+				siteElevation: site,
+				modelElevation: grid,
+				lapseRate,
+				enabled
+			}));
+		}
+
+		if ($$self.$$.dirty & /*estimate, prefs*/ 528) {
+			$$invalidate(12, change = estimate.status === 'ready'
+			? estimate.change * (prefs.temp === 'F' ? 1.8 : 1)
+			: null);
 		}
 	};
 
@@ -3336,14 +3846,29 @@ function instance$a($$self, $$props, $$invalidate) {
 		location,
 		load,
 		model,
+		valid,
+		prefs,
 		terrain,
+		enabled,
+		siteOverride,
+		lapseRate,
+		estimate,
 		grid,
 		busy,
+		change,
 		difference,
 		refresh,
+		changeLabel,
 		metres,
 		modelElevation,
-		click_handler
+		sourceKey,
+		temperature,
+		site,
+		click_handler,
+		input_change_handler,
+		input0_input_handler,
+		input1_input_handler,
+		click_handler_1
 	];
 }
 
@@ -3360,8 +3885,12 @@ class Elevation extends SvelteComponent {
 			{
 				location: 0,
 				load: 1,
-				modelElevation: 9,
-				model: 2
+				modelElevation: 17,
+				model: 2,
+				sourceKey: 18,
+				temperature: 19,
+				valid: 3,
+				prefs: 4
 			},
 			add_css$9
 		);
@@ -9471,6 +10000,7 @@ function create_if_block_4$3(ctx) {
 
 	let t15;
 	let t16;
+	let show_if = /*mapModel*/ ctx[4] && canonicalModel(/*mapModel*/ ctx[4]) !== /*data*/ ctx[8].model;
 	let t17;
 	let t18;
 	let t19;
@@ -9503,7 +10033,7 @@ function create_if_block_4$3(ctx) {
 			}
 		});
 
-	let if_block2 = /*mapModel*/ ctx[4] && /*mapModel*/ ctx[4] !== /*data*/ ctx[8].model && create_if_block_15$1(ctx);
+	let if_block2 = show_if && create_if_block_15$1(ctx);
 	let if_block3 = /*data*/ ctx[8].model !== /*model*/ ctx[7] && create_if_block_14$1(ctx);
 	let if_block4 = /*data*/ ctx[8].header.merged && create_if_block_13$1(ctx);
 
@@ -9580,7 +10110,7 @@ function create_if_block_4$3(ctx) {
 			span0 = element("span");
 			span0.textContent = "METEOROLOGICAL WORKSPACE";
 			span1 = element("span");
-			t22 = text("WeatherScope 0.6.1 · ");
+			t22 = text("WeatherScope 0.6.2 · ");
 			t23 = text(t23_value);
 			attr(small, "class", "svelte-7ebock");
 			attr(strong, "class", "svelte-7ebock");
@@ -9734,7 +10264,9 @@ function create_if_block_4$3(ctx) {
 			? 'Provider run: ' + timeLabel(Date.parse(/*data*/ ctx[8].header.refTime), false) + ' UTC'
 			: 'Provider run timestamp missing or invalid') + "")) set_data(t15, t15_value);
 
-			if (/*mapModel*/ ctx[4] && /*mapModel*/ ctx[4] !== /*data*/ ctx[8].model) {
+			if (dirty[0] & /*mapModel, data*/ 272) show_if = /*mapModel*/ ctx[4] && canonicalModel(/*mapModel*/ ctx[4]) !== /*data*/ ctx[8].model;
+
+			if (show_if) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 				} else {
@@ -10155,7 +10687,7 @@ function create_if_block_16$1(ctx) {
 	};
 }
 
-// (74:1) {#if mapModel&&mapModel!==data.model}
+// (74:1) {#if mapModel&&canonicalModel(mapModel)!==data.model}
 function create_if_block_15$1(ctx) {
 	let p_1;
 	let t0;
@@ -12008,7 +12540,11 @@ function create_fragment$4(ctx) {
 				location: /*location*/ ctx[1],
 				load: /*loadElevation*/ ctx[0],
 				modelElevation: /*data*/ ctx[8]?.header?.modelElevation,
-				model: /*served*/ ctx[35]
+				model: /*served*/ ctx[35],
+				sourceKey: /*model*/ ctx[7],
+				temperature: value(/*data*/ ctx[8], 'temperature', /*valid*/ ctx[13]),
+				valid: /*valid*/ ctx[13],
+				prefs: /*prefs*/ ctx[28]
 			}
 		});
 
@@ -12227,6 +12763,10 @@ function create_fragment$4(ctx) {
 			if (dirty[0] & /*loadElevation*/ 1) elevation_changes.load = /*loadElevation*/ ctx[0];
 			if (dirty[0] & /*data*/ 256) elevation_changes.modelElevation = /*data*/ ctx[8]?.header?.modelElevation;
 			if (dirty[1] & /*served*/ 16) elevation_changes.model = /*served*/ ctx[35];
+			if (dirty[0] & /*model*/ 128) elevation_changes.sourceKey = /*model*/ ctx[7];
+			if (dirty[0] & /*data, valid*/ 8448) elevation_changes.temperature = value(/*data*/ ctx[8], 'temperature', /*valid*/ ctx[13]);
+			if (dirty[0] & /*valid*/ 8192) elevation_changes.valid = /*valid*/ ctx[13];
+			if (dirty[0] & /*prefs*/ 268435456) elevation_changes.prefs = /*prefs*/ ctx[28];
 			elevation.$set(elevation_changes);
 
 			if (/*locationError*/ ctx[19]) {

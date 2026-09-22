@@ -17,6 +17,7 @@ export function describe(key){
  if(m){const [,kind,level]=m;const names={temp:['Temperature','K'],dewPoint:['Dew point','K'],rh:['Relative humidity','%'],wind:['Wind','m/s'],windDir:['Wind direction','°'],cloud:['Cloud fraction','%'],gh:['Geopotential height','m']};return {label:`${names[kind][0]} · ${level==='surface'?'surface':level.slice(0,-1)+' hPa'}`,unit:names[kind][1],group:kind==='cloud'?'Clouds':'Vertical profile'};}
  return {label:key,unit:'raw',group:'Other'};
 }
+export function canonicalModel(model){const key=typeof model==='string'?model.trim().toLowerCase():model;return Object.hasOwn(MODELS,key)?key:model;}
 export function normalize(payload,requestedModel){
  if(!Array.isArray(payload?.data?.ts)||!payload.data.ts.length)throw Error('No supported forecast time series was returned.');
  const fields=[];
@@ -27,7 +28,7 @@ export function normalize(payload,requestedModel){
   for(const [key,values] of Object.entries(block))if(key!=='ts'&&Array.isArray(values))fields.push({id:`${section}.${key}`,key,section,ts,values,...describe(key)});
  }
  const header=payload.header||{};
- return {fields,ts:payload.data.ts,header,summary:payload.summary||[],raw:payload,requestedModel,model:header.model||requestedModel};
+ return {fields,ts:payload.data.ts,header,summary:payload.summary||[],raw:payload,requestedModel,model:canonicalModel(header.model||requestedModel)};
 }
 export function nearestIndex(ts,time,tolerance=90*60000){let best=-1,delta=Infinity;ts.forEach((t,i)=>{const d=Math.abs(t-time);if(d<delta){delta=d;best=i;}});return delta<=tolerance?best:-1;}
 export function at(field,time){const i=nearestIndex(field.ts,time,0);return i<0?null:field.values[i]??null;}

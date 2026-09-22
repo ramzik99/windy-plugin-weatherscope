@@ -2,13 +2,13 @@
 
 **Every detail. One clear forecast.** A ECMWF-first point-forecast workspace for Windy.
 
-Version 0.6.1 adds location elevation and model-height comparison. Forecast Desk provides a seven-day overview with provider predictability and expandable meteorological detail. Distribution uses an installation URL; public-gallery review has not been requested.
+Version 0.6.2 adds location elevation and model-height comparison. Forecast Desk provides a seven-day overview with provider predictability and expandable meteorological detail. Distribution uses an installation URL; public-gallery review has not been requested.
 
 ## Install
 
 In [Windy Plugins](https://www.windy.com/plugins), choose **Load plugin directly from URL** and paste:
 
-https://windy-plugins.com/458307/windy-plugin-weatherscope/0.6.1/plugin.min.js
+https://windy-plugins.com/458307/windy-plugin-weatherscope/0.6.2/plugin.min.js
 
 After installation, [open WeatherScope](https://www.windy.com/plugin/weatherscope). See [validation details](VALIDATION.md) for tested coverage and limitations.
 
@@ -78,3 +78,6 @@ Use **My location** to request a browser position on demand. Allow location acce
 ## Parameter Library
 Open **Browse all parameters** from the main forecast. Search multiple words, combine category and pressure-level filters, or show pinned, available or missing fields. Open any field in place for its explanation, value, source unit, trend, sample availability, paginated forecast values and original unrounded data. Mini trends cover 24 hours; details offer 24/48 hours or all remaining times. Rain uses bars, directions use a compass, and percentages use a ring. Unmapped codes remain explicit raw values.
 
+
+## Elevation temperature estimate
+Open the elevation card and enable **Estimate assuming provider temperature is unadjusted**. Terrain height is the default; enter a surveyed site elevation if known and choose a lapse rate in Celsius per kilometre. Compare the estimate with the original provider value at the selected forecast time. The illustrative 6.5 starting value is not a verified local lapse rate. This optional what-if calculation resets on location/model changes; it does not modify daily values, other parameters, raw exports or Winter diagnostics.

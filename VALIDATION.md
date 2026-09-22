@@ -57,3 +57,7 @@ Production and preview builds pass. All 77 tests pass, including combined search
 
 ## 0.6.1 Elevation
 79 tests and production/preview builds pass. Tests cover missing heights, sea level, negative elevations, response parsing, cache reuse, exact coordinate keys, invalid coordinates and retry after failure. Preview confirms 250 m terrain versus 270 m model, expandable guidance and keyboard toggle. At 390px the elevation content has no horizontal overflow. Forecast values are not elevation-adjusted by WeatherScope; upstream adjustment status remains unverified.
+
+## 0.6.2 Temperature estimate
+All 84 automated tests and production/preview builds pass. Preview checks cover opt-in default, custom elevation, changed lapse rate, inversion sign, missing/invalid inputs, time-slider updates and reset on model change. Calculations retain precision while results use integer Celsius/Fahrenheit. This is sensitivity analysis under a user-selected assumption; upstream temperature adjustment remains unverified and no forecast skill improvement is claimed.
+Mobile preview at 390px: no horizontal overflow, inputs and comparison card readable. No browser error logs.
