@@ -1,3 +1,9 @@
+# WeatherScope 0.6.0 — Parameter Library
+
+Adds direct access from the main forecast, multi-word search, category/pressure-level filters, pinned and availability views, and expandable details for every returned field. Creative visuals include mini trends, rainfall bars, a directional compass, percentage rings and a clickable availability timeline. Source metadata, original values and paginated forecast tables are accessible in each field.
+
+77 tests and both builds pass. ECMWF remains the default; Meteoblue remains removed.
+
 # WeatherScope 0.5.2
 
 ECMWF is the default for new and existing installations. A one-time preference migration selects ECMWF while preserving locations, units and thresholds. Meteoblue is removed from model selection and comparisons. GFS and ICON remain optional. Daily predictability appears only when supplied by the selected source.
@@ -13,4 +19,5 @@ The timeline has a dedicated mint track, larger thumb, Previous/Next buttons, da
 74 tests pass. The forecast and display fixes were tested in Windy via private 0.5.1-rc.1 before final publication. See VALIDATION.md for feature checks and limitations.
 
 My location requests browser location only when tapped, validates coordinates and handles denial, unavailable service and timeouts. It does not start background tracking.
+
 

@@ -2,13 +2,13 @@
 
 **Every detail. One clear forecast.** A ECMWF-first point-forecast workspace for Windy.
 
-Version 0.5.2 is published and live-checked on Windy's hosting. Forecast Desk provides a seven-day overview with provider predictability and expandable meteorological detail. Distribution uses an installation URL; public-gallery review has not been requested.
+Version 0.6.0 is published and live-checked on Windy's hosting. Forecast Desk provides a seven-day overview with provider predictability and expandable meteorological detail. Distribution uses an installation URL; public-gallery review has not been requested.
 
 ## Install
 
 In [Windy Plugins](https://www.windy.com/plugins), choose **Load plugin directly from URL** and paste:
 
-https://windy-plugins.com/458307/windy-plugin-weatherscope/0.5.2/plugin.min.js
+https://windy-plugins.com/458307/windy-plugin-weatherscope/0.6.0/plugin.min.js
 
 After installation, [open WeatherScope](https://www.windy.com/plugin/weatherscope). See [validation details](VALIDATION.md) for tested coverage and limitations.
 
@@ -73,4 +73,8 @@ Build tooling is adapted from the [official Windy plugin template](https://githu
 
 
 Use **My location** to request a browser position on demand. Allow location access when prompted, or select a point on the map. No background tracking is started.
+
+
+## Parameter Library
+Open **Browse all parameters** from the main forecast. Search multiple words, combine category and pressure-level filters, or show pinned, available or missing fields. Open any field in place for its explanation, value, source unit, trend, sample availability, paginated forecast values and original unrounded data. Mini trends cover 24 hours; details offer 24/48 hours or all remaining times. Rain uses bars, directions use a compass, and percentages use a ring. Unmapped codes remain explicit raw values.
 

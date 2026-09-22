@@ -50,3 +50,7 @@ Final 0.5.1 installed successfully from https://windy-plugins.com/458307/windy-p
 ## 0.5.2 ECMWF default
 Production and preview builds pass; all 74 regression tests pass. ECMWF replaces Meteoblue in initial selection; existing preferences migrate once using baselineVersion 2, preserving other settings. Meteoblue is excluded from the available model list and comparisons.
 
+
+## 0.6.0 Parameter Library
+Production and preview builds pass. All 77 tests pass, including combined search/filter behavior, calm zero versus missing values, bounded summaries and honest unmapped-field explanations. Preview checks covered direct access, combined Wind + 850 hPa filters, expanded temperature trend, direction compass, percentage ring, forecast horizon, pagination and pinned filtering. No console errors were recorded. The detailed view was inspected at 390px, with no document overflow. Temporary viewport override reset.
+
