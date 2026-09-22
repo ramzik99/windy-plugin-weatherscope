@@ -321,3 +321,8 @@ test('cached profiles expire and an older model run cannot replace a newer run',
   assert.equal(isOlderRun(run,run+3600000),true);
   assert.equal(isOlderRun(run+3600000,run),false);
 });
+
+test('integer Winter display preserves light precipitation in both unit systems',async()=>{
+ const {formatSnow,formatTemperature}=await import(moduleUrl('displayUnits'));
+ assert.equal(formatPrecip(.2,'metric'),'<1 mm/3h');assert.equal(formatPrecip(1,'imperial'),'<1 in/3h');assert.equal(formatPrecip(0,'metric'),'0 mm/3h');assert.equal(formatSnow(.2,'metric'),'<1 cm');assert.equal(formatSnow(0,'metric'),'None');assert.equal(formatTemperature(-.2,'metric'),'0°C');assert.equal(formatTemperature(20.8,'imperial'),'69°F');
+});

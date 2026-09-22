@@ -1,7 +1,12 @@
-# WeatherScope 0.5.0 — Forecast Desk
+# WeatherScope 0.5.1
 
-Seven-day temperature range bars, complete-day precipitation and provider predictability lead the redesigned forecast. Select a day or time to explore a 24-hour temperature trend and interval table. Expand Meteorology for surface diagnostics, vertical structure, calculations and model comparison. Details retains visual exploration, integrated ECMWF Winter, full profile/hodograph, every returned parameter and coverage.
+Fixes the three-day request limit: request eight days of hourly data to cover the seven-day overview and its interval boundaries. Use dated provider daily minimum, maximum and predictability in the forecast point calendar, avoiding device-timezone gaps and mixing adjacent days.
 
-Meteoblue remains the default. Missing or misaligned predictability is unavailable rather than estimated. All forecasts are model output, not observations. No claim of measured forecast accuracy is made.
+Weather values now display whole numbers, including Winter. Positive precipitation below one unit displays as <1 instead of misleading zero; raw exports and calculations preserve precision. Coordinates and raw metadata preserve their necessary precision.
 
-65 automated tests pass; production and synthetic preview builds pass. Publication and live checks are recorded in VALIDATION.md.
+The timeline has a dedicated mint track, larger thumb, Previous/Next buttons, date endpoints, accessible valid-time text and working keyboard navigation. Forecast notes are collapsed to keep the daily view compact.
+
+74 tests pass. The forecast and display fixes were tested in Windy via private 0.5.1-rc.1 before final publication. See VALIDATION.md for feature checks and limitations.
+
+My location requests browser location only when tapped, validates coordinates and handles denial, unavailable service and timeouts. It does not start background tracking.
+

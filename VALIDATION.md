@@ -25,3 +25,21 @@ Source limitation: Windy returned a Meteoblue run displayed as 70 hours old, wit
 Hosted install URL: https://windy-plugins.com/458307/windy-plugin-weatherscope/0.5.0/plugin.min.js
 Source release commit: 76be7f7b9e8fa2390dec02a80bd20c092d82ea14
 Distribution remains by installation URL, not a public-gallery listing.
+
+## 0.5.1 regression checks — 2026-09-22
+
+Correction to the 0.5.0 report: the missing horizon was caused by our days:3 request, not an established provider limitation. The previous attribution was premature. Requests now use days:8 and step:1. Live responses contain 192 samples and eight dated daily summaries. Daily min/max and predictability now share the provider point-local calendar rather than device-local bins.
+
+Before final publication: production and preview builds pass; 71 automated tests pass. Tests include request horizon, refresh caching, provider errors without substitution, point-calendar day alignment, invalid summaries, daily interval coverage, trace/integer presentation, exact-time comparison, terrain constraints, missing data and Winter calculations.
+
+Private release candidate 0.5.1-rc.1 tested the forecast, formatting and slider fixes before the later My location addition. Live Windy checks: Amman and Reading seven-day lows/highs/predictability; day selection; timeline Home/End/arrows, Previous/Next and Now; refresh; Meteoblue/ECMWF/GFS/ICON source selection; four-model comparison; Meteorology; saved-place navigation; parameter export and coverage metadata. Exported JSON parsed successfully with 192 samples, eight summaries and unrounded raw temperatures.
+
+Preview checks: temperature/wind units, device/UTC time, saved-point persistence through reload, parameter search/pinning/inspection, chart parameter and horizon selection, atmospheric profile/hodograph and model comparison. 390px layout had no horizontal document overflow. Live mobile page reloaded into fullscreen plugin presentation; inspected visually. Temporary viewport override reset.
+
+Winter live checks: ECMWF forecast, sounding, time selection, metric/imperial units, summary copied and inspected, sounding PNG downloaded, contours rendered (five labels) and all labels removed on returning to Briefing. Browser error log was empty at the final live check.
+
+These are regression checks of implemented feature groups, not exhaustive verification of every browser, geography or weather regime. Forecast accuracy has not been measured against observations. Missing upper-air dew points continue to leave K/TT unavailable. Public-gallery submission remains outside this installation-link release.
+
+My location addition: 74 tests now pass, including valid coordinate order, bounded location request, denied/unavailable/timeout errors and invalid coordinates. The preview loading state and timeout fallback were checked; the prior forecast remains visible. Successful hardware geolocation depends on browser permission and the device location service.
+
+

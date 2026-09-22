@@ -1,5 +1,5 @@
 # Forecast Desk design
 
-Approved for publication by the user. Version 0.5.0 uses a compact navy and mint interface: seven-day overview first, selected forecast next, and expandable Meteorology below. Advanced tools remain in Details. Winter diagnostics use explicitly labelled ECMWF data.
+Version 0.5.1 keeps the approved navy/mint design. Seven-day overview first, concise whole-number values, selected forecast and expandable Meteorology. Daily rows use the forecast point calendar and provider daily summaries. Hourly times follow the user UTC/device-time preference. Forecast notes are collapsed. The slider uses a dedicated mint track, larger thumb, Previous/Next and keyboard controls.
 
-The standalone preview is synthetic. Daily predictability is the supplied Meteoblue index only when its index range aligns with the displayed calendar day. It is not a rain probability. Partial-day totals and missing parameters stay unavailable. The standalone Wintry Forecast installation was removed from the Windy menu; its source repository remains intact.
+Checked at 390px and desktop widths, in the preview and live Windy. Integrated Winter remains under Details. Missing values are not invented; trace precipitation is <1. Raw calculations and exports retain precision. The old standalone Wintry Forecast installation was removed previously; its source repository remains intact.
